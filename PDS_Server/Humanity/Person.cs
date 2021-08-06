@@ -1,12 +1,12 @@
 ﻿using System;
 
-namespace RevitTeams_Server.Humanity
+namespace PDS_Server.Humanity
 {
     public class Person
     {
         public static Person[] Persons { get; } = new Person[]
         {
-            new Person("Igor", "Perfilyev", "perfilev-id@revit-teams.ru"),
+            new Person("Игорь", "Перфильев", "perfilev-id@revit-teams.ru"),
             new Person("Ivan", "Petrov", "support@revit-teams.ru"),
             new Person("Mike", "Schneider",  "support@revit-teams.ru"),
             new Person("Olga", "Holm",  "support@revit-teams.ru"),

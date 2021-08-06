@@ -75,6 +75,16 @@ namespace PDS_Server.Repositories
                 UpdateResult result = await _collection.UpdateOneAsync(filter, update);
                 return result.ModifiedCount == 1;
             }
+            else if(typeof(T) == typeof(DbTeam))
+            {
+                UpdateDefinition<T> update = Builders<T>.Update
+                    .Set(e => (e as DbTeam).MaxCount, (element as DbTeam).MaxCount)
+                    .Set(e => (e as DbTeam).Name, (element as DbTeam).Name)
+                    .Set(e => (e as DbTeam).Users, (element as DbTeam).Users)
+                    .Set(e => (e as DbTeam).Owner, (element as DbTeam).Owner);
+                UpdateResult result = await _collection.UpdateOneAsync(filter, update);
+                return result.ModifiedCount == 1;
+            }
             return false;
         }
     }

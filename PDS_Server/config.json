@@ -1,9 +1,9 @@
 {
-  "version" : "1.0.0.1",
-  "secret": "mysupersecret_secretkey!123",
+  "version": "1.0.0.1",
+  "secret": "83c76b45395a4341a2ce3c6074d7d02f",
   "salt": "NZsP6NnmfBuYeJrrAKNuVQ==",
-  "issuer": "RTAuthServer",
-  "audience": "RTAuthClient",
+  "issuer": "RTServerIssuer",
+  "audience": "RTClientAudience",
   "lifetime": 60,
   "yandexMailPwd": "Perfileeff12"
 }
