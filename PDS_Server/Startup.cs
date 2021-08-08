@@ -14,6 +14,7 @@ using MongoDB.Driver;
 using PDS_Server.Repositories;
 using PDS_Server.Services;
 using System;
+using System.IO;
 using System.Net;
 
 namespace PDS_Server
@@ -32,8 +33,9 @@ namespace PDS_Server
             services.AddSession(options => {
                 options.IdleTimeout = TimeSpan.FromMinutes(AuthOptions.LIFETIME);
                 options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest; 
-                options.Cookie.SameSite = SameSiteMode.None; 
+                options.Cookie.SameSite = SameSiteMode.Strict; 
                 options.Cookie.HttpOnly = false;
+                options.Cookie.IsEssential = true;
             });
 
             services.AddYandexObjectStorage(Configuration);
@@ -63,11 +65,34 @@ namespace PDS_Server
             services.AddTransient<IEmailSender, YandexSender>();
 
             services.AddControllersWithViews();
+
+            services.AddHsts(options =>
+            {
+                options.Preload = true;
+                options.IncludeSubDomains = true;
+                options.MaxAge = TimeSpan.FromDays(60);
+            });
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            app.UseHttpsRedirection();
+            app.Use(async (context, next) =>
+            {
+                if (context.Request.Path.StartsWithSegments("/robots.txt"))
+                {
+                    var robotsTxtPath = Path.Combine(env.ContentRootPath, "robots.txt");
+                    string output = "User-agent: *  \nAllow: /";
+                    if (File.Exists(robotsTxtPath))
+                    {
+                        output = await File.ReadAllTextAsync(robotsTxtPath);
+                    }
+                    context.Response.ContentType = "text/plain";
+                    await context.Response.WriteAsync(output);
+                }
+                else await next();
+            });
+
+            app.UseHsts();
 
             app.UseStaticFiles();
 
@@ -89,25 +114,6 @@ namespace PDS_Server
             app.UseAuthentication();
 
             app.UseAuthorization();
-
-            /*
-            app.UseStatusCodePages(async context => {
-                var request = context.HttpContext.Request;
-                var response = context.HttpContext.Response;
-                if(request.Path.ToUriComponent().ToLower().Contains("/api/"))
-                {
-                    if (response.StatusCode == (int)HttpStatusCode.Unauthorized)
-                    {
-                        response.Redirect("/user/login");
-                    }
-                    else
-                    {
-                        response.Redirect("/");
-                    }
-                    return;
-                }
-            });
-            */
 
             app.UseEndpoints(endpoints =>
             {
