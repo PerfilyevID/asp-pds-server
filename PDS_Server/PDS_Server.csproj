@@ -230,10 +230,13 @@
     <Content Update="wwwroot\img\bernie-the-cat\summer\020-summer.svg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Update="wwwroot\img\slider\slide_02.gif">
+    <Content Update="wwwroot\img\icons\download_zip.svg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Update="wwwroot\img\slider\slide_01.gif">
+    <Content Update="wwwroot\img\slider\slide_001.gif">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Update="wwwroot\img\slider\slide_000.gif">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Update="wwwroot\lib\bootstrap\css\bootstrap.min.css">
@@ -269,9 +272,19 @@
     <None Update="Local\Html\LayoutConfirm.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="Local\Html\LayoutSupportEvent.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Local\Html\LayoutSupportCreated.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="Local\Html\LayoutWelcome.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Views\Contacts\" />
   </ItemGroup>
 
 </Project>

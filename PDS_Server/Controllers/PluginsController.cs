@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace PDS_Server.Api
 {
-    [Route("api/plugins")]
+    [Route("plugins")]
     [ApiController]
     public class PluginsController : Controller
     {

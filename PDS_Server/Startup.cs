@@ -31,7 +31,7 @@ namespace PDS_Server
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddSession(options => {
-                options.IdleTimeout = TimeSpan.FromMinutes(AuthOptions.LIFETIME);
+                options.IdleTimeout = TimeSpan.FromMinutes(15);
                 options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest; 
                 options.Cookie.SameSite = SameSiteMode.Strict; 
                 options.Cookie.HttpOnly = false;
@@ -62,6 +62,7 @@ namespace PDS_Server
             services.AddTransient<IMongoRepository<DbPlugin>, MongoRepository<DbPlugin>>();
             services.AddTransient<IMongoRepository<DbApplication>, MongoRepository<DbApplication>>();
             services.AddTransient<IMongoRepository<DbTeam>, MongoRepository<DbTeam>>();
+            services.AddTransient<IMongoRepository<DbReport>, MongoRepository<DbReport>>();
             services.AddTransient<IEmailSender, YandexSender>();
 
             services.AddControllersWithViews();

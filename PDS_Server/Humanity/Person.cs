@@ -7,14 +7,14 @@ namespace PDS_Server.Humanity
         public static Person[] Persons { get; } = new Person[]
         {
             new Person("Игорь", "Перфильев", "perfilev-id@revit-teams.ru"),
-            new Person("Ivan", "Petrov", "support@revit-teams.ru"),
-            new Person("Mike", "Schneider",  "support@revit-teams.ru"),
-            new Person("Olga", "Holm",  "support@revit-teams.ru"),
-            new Person("Mika", "Lindberg",  "support@revit-teams.ru")
+            new Person("Игорь", "Перфильев", "support@revit-teams.ru"),
+            new Person("Илья", "Бородатов", "support@revit-teams.ru"),
+            new Person("Олег", "Бараксанов",  "support@revit-teams.ru"),
+            new Person("Артем", "Шерстнов",  "support@revit-teams.ru")
         };
         public static Person GetRandomPerson() 
         { 
-            return Persons[new Random().Next(0, Persons.Length - 1)]; 
+            return Persons[new Random().Next(1, Persons.Length - 1)]; 
         }
         public Person(string firstName, string lastName, string email)
         {

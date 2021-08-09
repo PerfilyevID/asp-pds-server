@@ -59,38 +59,10 @@ namespace PDS_Server.Api
             catch { return NotFound(); }
         }
 
-        [HttpPost]
-        [Authorize("Admin")]
-        [Route("upload")]
-        public async Task<IActionResult> Upload([FromForm] IFormFile file, string version, string changelog)
-        {
-            try
-            {
-                await SaveFile(file, version, changelog);
-                return Ok();
-            }
-            catch { return BadRequest(); }
-        }
         #region Private
-        private async Task<string> SaveFile(IFormFile file, string version, string changelog)
-        {
-            string name = string.Format("{0}.zip", Guid.NewGuid().ToString());
-            var result = await _yandexOptions.PutObjectAsync(file.OpenReadStream(), $"Applications/{name}.zip");
-            if (result.IsSuccessStatusCode)
-            {
-                DbApplication newApp = new DbApplication()
-                {
-                    Link = name, 
-                    Version = version, 
-                    Changelog = changelog
-                };
-                await _appRepository.Create(newApp);
-            }
-            return null;
-        }
         private async Task<Stream> LoadFile(string name)
         {
-            return await _yandexOptions.GetAsStreamAsync($"Applications/{name}");
+            return await _yandexOptions.GetAsStreamAsync($"Releases/{name}");
         }
         #endregion
     }

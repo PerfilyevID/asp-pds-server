@@ -69,7 +69,7 @@ namespace PDS_Server.Controllers
         [Route("login")]
         public IActionResult Login()
         {
-            if (User.Identity.IsAuthenticated) return RedirectToAction("index", "");
+            if (User.Identity.IsAuthenticated) return RedirectToAction("index", "home");
             return View();
         }
 
@@ -107,14 +107,14 @@ namespace PDS_Server.Controllers
                 return RedirectToAction("index", "home");
             }
             catch { }
-            return RedirectToAction("index", "");
+            return RedirectToAction("index", "home");
         }
 
         [HttpGet]
         [Route("register")]
         public async Task<IActionResult> Register()
         {
-            if (User.Identity.IsAuthenticated) return RedirectToAction("index", "");
+            if (User.Identity.IsAuthenticated) return RedirectToAction("index", "home");
             return View(await GetAgreement("agreement.txt", _yandexOptions));
         }
 
@@ -153,7 +153,7 @@ namespace PDS_Server.Controllers
                         SecondName = lastName,
                         VerifyLink = Guid.NewGuid().ToString()
                     };
-                    await _mailClient.SendMessageAsync(Person.Persons[0], "Подтверждение регистрации", Local.EmailTemplate.LayoutConfirm, $"https://{Request.Host.Value}/user/verify/{account.VerifyLink}", account.Login, "noreply");
+                    await _mailClient.SendMessageAsync(Person.Persons[0], "Подтверждение регистрации", Local.EmailTemplate.LayoutConfirm, $"http://{Request.Host.Value}/user/verify/{account.VerifyLink}", account.Login, "noreply");
                     ObjectId id = await _accountRepository.Create(account);
                     var list = joinTeam.Users.ToList();
                     list.Add(id);

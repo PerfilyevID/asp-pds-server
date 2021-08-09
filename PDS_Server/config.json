@@ -4,6 +4,6 @@
   "salt": "NZsP6NnmfBuYeJrrAKNuVQ==",
   "issuer": "RTServerIssuer",
   "audience": "RTClientAudience",
-  "lifetime": 60,
+  "lifetime": 720,
   "yandexMailPwd": "Perfileeff12"
 }

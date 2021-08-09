@@ -3,6 +3,8 @@
     public enum EmailTemplate
     {
         LayoutConfirm,
-        LayoutWelcome
+        LayoutWelcome,
+        LayoutSupportCreated,
+        LayoutSupportEvent
     }
 }

@@ -19,12 +19,11 @@ namespace RevitTeams_Server.Controllers
     [Route("store")]
     public class StoreController : Controller
     {
-        private readonly HttpClient _client;
         private readonly IMongoRepository<DbPlugin> _pluginRepository;
         private readonly YandexStorageService _yandexOptions;
-        public StoreController(IMongoRepository<DbPlugin> accountRepository, IOptions<YandexStorageOptions> yandexOptions)
+        public StoreController(IMongoRepository<DbPlugin> pluginRepository, IOptions<YandexStorageOptions> yandexOptions)
         {
-            _pluginRepository = accountRepository;
+            _pluginRepository = pluginRepository;
             _yandexOptions = yandexOptions.Value.CreateYandexObjectService();
         }
 

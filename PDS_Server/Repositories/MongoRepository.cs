@@ -85,6 +85,18 @@ namespace PDS_Server.Repositories
                 UpdateResult result = await _collection.UpdateOneAsync(filter, update);
                 return result.ModifiedCount == 1;
             }
+            else if (typeof(T) == typeof(DbReport))
+            {
+                UpdateDefinition<T> update = Builders<T>.Update
+                    .Set(e => (e as DbReport).Comment, (element as DbReport).Comment)
+                    .Set(e => (e as DbReport).Description, (element as DbReport).Description)
+                    .Set(e => (e as DbReport).IsClosed, (element as DbReport).IsClosed)
+                    .Set(e => (e as DbReport).Issue, (element as DbReport).Issue)
+                    .Set(e => (e as DbReport).Link, (element as DbReport).Link)
+                    .Set(e => (e as DbReport).Time, (element as DbReport).Time);
+                UpdateResult result = await _collection.UpdateOneAsync(filter, update);
+                return result.ModifiedCount == 1;
+            }
             return false;
         }
     }

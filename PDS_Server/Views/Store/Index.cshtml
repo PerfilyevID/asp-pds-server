@@ -16,11 +16,10 @@
             <div class="card-body">
 
                 <div class="row">
-                    <div class="col-10">
-                        <h5 class="card-title">@plugin.Name</h5>
-                    </div>
-                    <div class="col-2 text-end">
-                        <a type="button" href="@string.Format("/store/delete?id={0}", plugin.Id)"  class="btn btn-sm btn-outline-danger">Удалить</a>
+                    <h5 class="card-title">@plugin.Name</h5>
+                    <div class="float-end" style="position:absolute;right:1.0rem;">
+                        <a type="button" href="@string.Format("/store/delete?id={0}", plugin.Id)" class="btn btn-sm btn-outline-danger float-end">Удалить</a>
+
                     </div>
                 </div>
 
@@ -212,7 +211,6 @@
             element.setAttribute("action", newRoute);
             element.classList -= ".was-validated";
             modalAddRevitVersion.show();
-            console.log(element.getAttribute("action"));
         }
 
         document.onNewVersion = function onNewVersion() {
