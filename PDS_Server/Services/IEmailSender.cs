@@ -17,7 +17,7 @@ namespace PDS_Server.Services
     {
         public async Task SendMessageAsync(Person person, string subject, EmailTemplate template, string format, string to, string from="noreply")
         {
-            var html = File.ReadAllText(Path.Combine(Directory.GetCurrentDirectory(), string.Format(@"Local\Html\{0}.html", template.ToString("G"))));
+            var html = File.ReadAllText(Path.Combine(Directory.GetCurrentDirectory(), "Local", "Html", $"{template.ToString("G")}.html"));
             var emailMessage = new MimeMessage();
 
             emailMessage.From.Add(new MailboxAddress(string.Format($"{person.FirstName} из RevitTeams"), $"{from}@revit-teams.ru"));

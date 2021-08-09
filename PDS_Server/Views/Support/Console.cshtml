@@ -14,7 +14,7 @@
         <div class="card col-md-8" style="margin-bottom:1rem;">
             <div class="card-body">
                 <h5 class="card-title">@report.Issue</h5>
-                <h6 class="card-subtitle mb-2 text-muted">@report.Time.ToString("g")</h6>
+                <h6 class="card-subtitle mb-2 text-muted">GMT+3 @report.Time.AddHours(3).ToString("g")</h6>
                 <p class="card-text">@report.Description</p>
                 @if (report.Link != null)
                 {

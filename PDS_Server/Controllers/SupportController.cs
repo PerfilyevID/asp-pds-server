@@ -169,7 +169,7 @@ namespace PDS_Server.Controllers
             {
                 if (file != null) await DeleteFile(report);
                 await _reportRepository.Delete(report.Id);
-                ViewBag.Alert = "Проверьте email!";
+                ViewBag.Alert = "Ошибка";
                 return View("Index");
             }
         }
