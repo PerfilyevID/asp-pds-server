@@ -11,6 +11,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using CommonEnvironment.Elements;
+using MongoDB.Bson;
 
 namespace RevitTeams_Server.Controllers
 {
@@ -66,13 +67,18 @@ namespace RevitTeams_Server.Controllers
             try
             {
                 List<object> data = new List<object>();
-                DbPlugin[] collection = (await _pluginRepository.Get()).Where(x => x.Target == "cmn" || x.Target == "pnl").ToArray();
-                DbPlugin plugin = collection.Where(x => x.Id.ToString() == id).First();
-                DbVersion targetVersion = plugin.Versions.Where(x => x.Published && x.RevitVersions.Where(z => z.Link != null && z.Number == version).Count() != 0).First();
-                DbRevitVersionInstance targetRevitVersion = targetVersion.RevitVersions.Where(x => x.Number == revitVersion).First();
-                if (targetVersion != null)
+                IEnumerable<DbPlugin> filteredCollection = (await _pluginRepository.Get()).Where(x => (x.Target == "cmn" || x.Target == "pnl") && x.Id == new ObjectId(id));
+                if(filteredCollection.Any())
                 {
-                    return File(await LoadFile(plugin, targetRevitVersion), "application/octet-stream");
+                    DbPlugin plugin = filteredCollection.First();
+                    foreach (DbVersion v in plugin.Versions.Where(x => x.Published))
+                    {
+                        IEnumerable <DbRevitVersionInstance> filteredRevitCollection = v.RevitVersions.Where(x => x.Number == revitVersion && x.Link != null);
+                        if (filteredRevitCollection.Any())
+                        {
+                            return File(await LoadFile(plugin, filteredRevitCollection.First()), "application/octet-stream");
+                        }
+                    }
                 }
             }
             catch { }

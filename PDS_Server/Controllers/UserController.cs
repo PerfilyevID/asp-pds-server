@@ -206,7 +206,7 @@ namespace PDS_Server.Controllers
                         return View("Redirect", new RedirectModel() { 
                             Title = "Подтверждено", 
                             Header = "Вжууух!", 
-                            Quote= ". . . и Beta-доступ открыт!",
+                            Quote= ". . . и доступ открыт!",
                             Sticker = "business/001-love message.svg",
                             Body = "Спасибо, что подтвердили адрес своей электронной почты!" +
                             " Мы очень стараемся запустить сервис как можно скорее!" +

@@ -132,7 +132,7 @@ namespace PDS_Server.Controllers
             report.Id = await _reportRepository.Create(report);
             if (file != null) await SaveFile(file, report);
             await _mailClient.SendMessageAsync(Person.GetRandomPerson(), "Поддержка", Local.EmailTemplate.LayoutSupportCreated, $"http://{Request.Host.Value}/support/report/{report.Id}", user.Login, "support");
-            ViewBag.Success = "Обращение обращение отправлено в поддержку!";
+            ViewBag.Success = "Обращение отправлено в поддержку!";
             return View("Index");
         }
 
@@ -162,7 +162,7 @@ namespace PDS_Server.Controllers
             try
             {
                 await _mailClient.SendMessageAsync(Person.GetRandomPerson(), "Поддержка", Local.EmailTemplate.LayoutSupportCreated, $"http://{Request.Host.Value}/support/report/{report.Id}", email, "support");
-                ViewBag.Success = "Обращение обращение отправлено в поддержку!";
+                ViewBag.Success = "Обращение отправлено в поддержку!";
                 return View("Index");
             }
             catch
