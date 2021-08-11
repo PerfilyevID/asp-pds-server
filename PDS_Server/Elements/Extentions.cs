@@ -23,5 +23,14 @@ namespace CommonEnvironment.Elements
                 ImageData = user.ImageData
             };
         }
+        public static dynamic ToResponse(this DbApplication application)
+        {
+            return new
+            {
+                Link = application.Link,
+                Version = application.Version,
+                Changelog = application.Changelog
+            };
+        }
     }
 }

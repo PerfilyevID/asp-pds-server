@@ -63,6 +63,7 @@ namespace PDS_Server
             services.AddTransient<IMongoRepository<DbApplication>, MongoRepository<DbApplication>>();
             services.AddTransient<IMongoRepository<DbTeam>, MongoRepository<DbTeam>>();
             services.AddTransient<IMongoRepository<DbReport>, MongoRepository<DbReport>>();
+            services.AddTransient<IMongoRepository<DbException>, MongoRepository<DbException>>();
             services.AddTransient<IEmailSender, YandexSender>();
 
             services.AddControllersWithViews();

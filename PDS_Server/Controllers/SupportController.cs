@@ -21,14 +21,36 @@ namespace PDS_Server.Controllers
     {
         private readonly IMongoRepository<DbReport> _reportRepository;
         private static IMongoRepository<DbAccount> _accountRepository;
+        private static IMongoRepository<DbException> _exceptionRepository;
         private readonly YandexStorageService _yandexOptions;
         private static IEmailSender _mailClient;
-        public SupportController(IMongoRepository<DbReport> reportRepository, IEmailSender mailClient, IMongoRepository<DbAccount> accountRepository, IOptions<YandexStorageOptions> yandexOptions)
+        public SupportController(IMongoRepository<DbException> exceptionRepository, IMongoRepository<DbReport> reportRepository, IEmailSender mailClient, IMongoRepository<DbAccount> accountRepository, IOptions<YandexStorageOptions> yandexOptions)
         {
+            _exceptionRepository = exceptionRepository;
             _reportRepository = reportRepository;
             _accountRepository = accountRepository;
             _mailClient = mailClient;
             _yandexOptions = yandexOptions.Value.CreateYandexObjectService();
+        }
+
+        [Route("bug")]
+        [HttpPost]
+        public async Task<IActionResult> Bug([FromForm] string user, [FromForm] string time, [FromForm] string data)
+        {
+            try
+            {
+                var ddd = new HashSet<string>((await _exceptionRepository.Get()).Select(x => x.Data));
+                if(!ddd.Contains(data))
+                {
+                    await _exceptionRepository.Create(new DbException() { User = user, Time = time, Data = data });
+                }
+                return Ok();
+            }
+            catch (Exception)
+            {
+                return BadRequest();
+            }
+
         }
 
         [Route("download/{name?}")]
@@ -101,7 +123,7 @@ namespace PDS_Server.Controllers
         [Route("index")]
         [Route("")]
         [HttpGet]
-        public async Task<IActionResult> Index()
+        public IActionResult Index()
         {
             return View();
         }

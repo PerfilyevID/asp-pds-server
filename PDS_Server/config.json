@@ -5,5 +5,7 @@
   "issuer": "RTServerIssuer",
   "audience": "RTClientAudience",
   "lifetime": 720,
-  "yandexMailPwd": "Perfileeff12"
+  "yandexMailPwd": "Perfileeff12",
+  "bot_name": "rt_debug_bot",
+  "bot_token": "1897793531:AAH4uAtf6UVHl3WruSZOgrd4LjbMHX_L86A"
 }

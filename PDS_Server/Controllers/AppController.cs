@@ -8,6 +8,7 @@ using Microsoft.Extensions.Options;
 using PDS_Server.Repositories;
 using System;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace PDS_Server.Api
@@ -25,24 +26,13 @@ namespace PDS_Server.Api
         }
 
         [HttpGet]
-        [Route("version")]
-        public IActionResult Version()
-        {
-            try
-            {
-                return new OkObjectResult(ConfigurationManager.AppSetting.GetValue<string>("version"));
-            }
-            catch { return BadRequest(); }
-        }
-
-        [HttpGet]
-        [Authorize]
         [Route("list")]
         public async Task<IActionResult> List()
         {
             try
             {
-                return new OkObjectResult(await _appRepository.Get());
+                var list = (await _appRepository.Get()).ToList();
+                return new OkObjectResult(list.Select(x => x.ToResponse()));
             }
             catch { return BadRequest(); }
         }
