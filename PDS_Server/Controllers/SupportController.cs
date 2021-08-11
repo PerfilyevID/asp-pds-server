@@ -46,11 +46,8 @@ namespace PDS_Server.Controllers
                 }
                 return Ok();
             }
-            catch (Exception)
-            {
-                return BadRequest();
-            }
-
+            catch { }
+            return BadRequest();
         }
 
         [Route("download/{name?}")]

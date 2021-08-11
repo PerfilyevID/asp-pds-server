@@ -270,6 +270,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="docker-compose.yaml">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </None>
     <None Update="Local\Html\LayoutConfirm.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
