@@ -102,7 +102,8 @@
                 <div class="accordion-item">
                     <h2 class="accordion-header" id="heading-@i.ToString()">
                         <a class="btn accordion-button" href="/deleteversion/@app.Id" data-bs-toggle="collapse" data-bs-target="#collapse-@i.ToString()" aria-expanded="true" aria-controls="collapse-@i.ToString()">
-                            Версия: @app.Version@if (count == 0)
+                            Версия: @app.Version
+                            @if (count == 0)
                             {
                                 <span class="badge bg-success" style="margin-left:0.4rem;">Latest</span>
                                 count++;
@@ -114,11 +115,29 @@
                             <p>@app.Changelog</p>
                             @if (User.Identity.IsAuthenticated)
                             {
-                                <a href="@downloadlink" class="btn btn-sm btn-warning"><img src="~/img/icons/download_zip.svg" style="margin-bottom:0.2rem;margin-right: 0.3rem; width:1.3rem;height:1.3rem;" /> @title</a>
+                                @if (count == 0)
+                                {
+                                    <a href="@downloadlink" class="btn btn-sm btn-warning"><img src="~/img/icons/download_zip.svg" style="margin-bottom:0.2rem;margin-right: 0.3rem; width:1.3rem;height:1.3rem;" /> @title</a>
+
+                                }
+                                else
+                                {
+                                    <a href="@downloadlink" class="btn btn-sm btn-warning disabled"><img src="~/img/icons/download_zip.svg" style="margin-bottom:0.2rem;margin-right: 0.3rem; width:1.3rem;height:1.3rem;" /> @title</a>
+
+                                }
                             }
                             else
                             {
-                                <a href="user/login" class="btn btn-sm btn-light"><img src="~/img/icons/download_zip.svg" style="margin-bottom: 0.2rem; margin-right: 0.3rem; width: 1.3rem; height: 1.3rem;" /> @title</a>
+                                @if (count == 0)
+                                {
+                                    <a href="user/login" class="btn btn-sm btn-light"><img src="~/img/icons/download_zip.svg" style="margin-bottom: 0.2rem; margin-right: 0.3rem; width: 1.3rem; height: 1.3rem;" /> @title</a>
+
+                                }
+                                else
+                                {
+                                    <a href="user/login" class="btn btn-sm btn-light disabled"><img src="~/img/icons/download_zip.svg" style="margin-bottom: 0.2rem; margin-right: 0.3rem; width: 1.3rem; height: 1.3rem;" /> @title</a>
+
+                                }
                             }
                             @if (User.IsInRole("Admin"))
                             {
@@ -129,6 +148,7 @@
                         </div>
                     </div>
                 </div>
+                i++;
             }
         }
         else
@@ -170,7 +190,7 @@
 
                         <div class="col-md-12">
                             <label for="version_form" class="form-label">Версия</label>
-                            <input class="form-control" placeholder="0.0.0.1a" name="version" id="version_form" required>
+                            <input class="form-control" placeholder="0.0.0.1" name="version" id="version_form" required>
                         </div>
 
                         <div class="col-md-12">

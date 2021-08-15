@@ -35,14 +35,14 @@ namespace PDS_Server.Controllers
 
         [Route("bug")]
         [HttpPost]
-        public async Task<IActionResult> Bug([FromForm] string user, [FromForm] string time, [FromForm] string data)
+        public async Task<IActionResult> Bug([FromForm] string user, [FromForm] string time, [FromForm] string data, [FromForm] string plugin)
         {
             try
             {
                 var ddd = new HashSet<string>((await _exceptionRepository.Get()).Select(x => x.Data));
                 if(!ddd.Contains(data))
                 {
-                    await _exceptionRepository.Create(new DbException() { User = user, Time = time, Data = data });
+                    await _exceptionRepository.Create(new DbException() { User = user, Time = time, Data = data, Plugin = plugin });
                 }
                 return Ok();
             }

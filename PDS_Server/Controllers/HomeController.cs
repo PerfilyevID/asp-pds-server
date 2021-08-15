@@ -54,10 +54,12 @@ namespace PDS_Server.Controllers
         {
             if (file != null && !string.IsNullOrEmpty(version) && !string.IsNullOrEmpty(changelog))
             {
-                DbApplication application = new DbApplication() { Version = version, Changelog = changelog };
-                application.Id = await _applicationRepository.Create(application);
                 if (file.FileName.Split('.').Last().ToLower() == "zip")
+                {
+                    DbApplication application = new DbApplication() { Version = version, Changelog = changelog };
+                    application.Id = await _applicationRepository.Create(application);
                     await SaveFile(file, application);
+                }
             }
             return RedirectToAction("index", "home");
         }
