@@ -94,49 +94,49 @@
         @if (Model.Count > 0)
         {
             int i = 0;
-            int count = 0;
             foreach (var app in Model)
             {
+                string className = "accordion-collapse collapse";
+                string buttonClassName = "accordion-button";
+                string expanded = "false";
+                if (i == 0) className += " show";
+                if (i == 0) expanded = "true";
+                if (i != 0) buttonClassName += " collapsed";
                 string downloadlink = $"download/{app.Link}.zip";
                 string title = $"download_{app.Version.Replace(".", "_")}.zip";
                 <div class="accordion-item">
                     <h2 class="accordion-header" id="heading-@i.ToString()">
-                        <a class="btn accordion-button" href="/deleteversion/@app.Id" data-bs-toggle="collapse" data-bs-target="#collapse-@i.ToString()" aria-expanded="true" aria-controls="collapse-@i.ToString()">
+                        <a class="btn @buttonClassName" href="/deleteversion/@app.Id" data-bs-toggle="collapse" data-bs-target="#collapse-@i.ToString()" aria-expanded="@expanded" aria-controls="collapse-@i.ToString()">
                             Версия: @app.Version
-                            @if (count == 0)
+                            @if (i == 0)
                             {
                                 <span class="badge bg-success" style="margin-left:0.4rem;">Latest</span>
-                                count++;
                             }
                         </a>
                     </h2>
-                    <div id="collapse-@i.ToString()" class="accordion-collapse collapse show" aria-labelledby="heading-@i.ToString()" data-bs-parent="#accordionDownload">
+                    <div id="collapse-@i.ToString()" class="@className" aria-labelledby="heading-@i.ToString()" data-bs-parent="#accordionDownload">
                         <div class="accordion-body">
-                            <p>@app.Changelog</p>
+                            <p>@Html.Raw(app.Changelog)</p>
                             @if (User.Identity.IsAuthenticated)
                             {
-                                @if (count == 0)
+                                @if (i == 0)
                                 {
-                                    <a href="@downloadlink" class="btn btn-sm btn-warning"><img src="~/img/icons/download_zip.svg" style="margin-bottom:0.2rem;margin-right: 0.3rem; width:1.3rem;height:1.3rem;" /> @title</a>
-
+                                    <a href="@downloadlink" class="btn btn-sm btn-warning"><img src="~/img/icons/download_zip.svg" style="margin-bottom:0.2rem;margin-right: 0.3rem; width:1.3rem;height:1.3rem;" /> @Html.Raw(title)</a>
                                 }
                                 else
                                 {
-                                    <a href="@downloadlink" class="btn btn-sm btn-warning disabled"><img src="~/img/icons/download_zip.svg" style="margin-bottom:0.2rem;margin-right: 0.3rem; width:1.3rem;height:1.3rem;" /> @title</a>
-
+                                    <a href="@downloadlink" class="btn btn-sm btn-warning disabled"><img src="~/img/icons/download_zip.svg" style="margin-bottom:0.2rem;margin-right: 0.3rem; width:1.3rem;height:1.3rem;" /> @Html.Raw(title)</a>
                                 }
                             }
                             else
                             {
-                                @if (count == 0)
+                                @if (i == 0)
                                 {
-                                    <a href="user/login" class="btn btn-sm btn-light"><img src="~/img/icons/download_zip.svg" style="margin-bottom: 0.2rem; margin-right: 0.3rem; width: 1.3rem; height: 1.3rem;" /> @title</a>
-
+                                    <a href="user/login" class="btn btn-sm btn-light"><img src="~/img/icons/download_zip.svg" style="margin-bottom: 0.2rem; margin-right: 0.3rem; width: 1.3rem; height: 1.3rem;" /> @Html.Raw(title)</a>
                                 }
                                 else
                                 {
-                                    <a href="user/login" class="btn btn-sm btn-light disabled"><img src="~/img/icons/download_zip.svg" style="margin-bottom: 0.2rem; margin-right: 0.3rem; width: 1.3rem; height: 1.3rem;" /> @title</a>
-
+                                    <a href="user/login" class="btn btn-sm btn-light disabled"><img src="~/img/icons/download_zip.svg" style="margin-bottom: 0.2rem; margin-right: 0.3rem; width: 1.3rem; height: 1.3rem;" /> @Html.Raw(title)</a>
                                 }
                             }
                             @if (User.IsInRole("Admin"))
