@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CommonEnvironment.Elements.Revit;
+using System;
 
 namespace CommonEnvironment.Elements
 {
@@ -30,6 +31,21 @@ namespace CommonEnvironment.Elements
                 Link = application.Link,
                 Version = application.Version,
                 Changelog = application.Changelog
+            };
+        }
+        public static dynamic ToResponse(this DbDocument application)
+        {
+            return new
+            {
+                Id = application.Id.ToString(),
+                Department = application.Department==null ? null : application.Department.ToString(),
+                FoundByUser = application.FoundByUser == null ? null : application.FoundByUser.ToString(),
+                FullPath = application.FullPath,
+                IsCloudModel = application.IsCloudModel,
+                Name = application.Name,
+                NamSyncCounte = application.SyncCount,
+                ServerGuid = application.ServerGuid,
+                Project = application.Project == null ? null : application.Project.ToString(),
             };
         }
     }

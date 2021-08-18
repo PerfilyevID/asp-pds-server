@@ -25,25 +25,55 @@
             </div>
         </div>
     </div>
-    </br>
-    </br>
+    <br>
+    <br>
     <h1><img src="~/android-chrome-192x192.png" alt="" style="margin-bottom: 0.4rem; margin-right: 0.3rem; width:3rem;height:3rem;">Revit<strong>Teams</strong></h1>
     <p class="lead">Платформа для проектировщиков. Мы делимся наработками и опытом в области автоматизации BIM проектирования.</p>
     <div class="accordion" id="accordionFeatures">
         <div class="accordion-item">
             <h2 class="accordion-header" id="headingOne">
                 <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
-                    Автоматизация
+                    Доступные плагины
                 </button>
             </h2>
             <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#accordionFeatures">
                 <div class="accordion-body">
-                    <strong>Только проверенные на реальных проектах наработки.</strong> Инструменты для проектировщиков и BIM-координаторов. 
-                    </br>
-                    <button class="btn btn-sm btn-light" type="button" disabled>
-                        <span class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true"></span>
-                        Информация появится в ближайшее время
-                    </button>
+                    @{
+                        bool firstPlugin = true;
+                    }
+                    @foreach (var plugin in ViewBag.Plugins)
+                    {
+                        if (!firstPlugin)
+                        {
+                            <br />
+                        }
+                        if (firstPlugin)
+                        {
+                            firstPlugin = false;
+                        }
+
+                        var version = plugin.Versions[plugin.Versions.Length - 1];
+
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">@plugin.Name</h5>
+                                <h6 class="card-subtitle mb-2 text-muted"> Версия: <span class="badge bg-primary">@version.Number</span> </h6>
+                                <p class="card-text">@plugin.Description</p>
+                                <div class="alert alert-secondary" role="alert"> <strong>Changelog:</strong> <br /> @version.Changelog </div>
+                                @foreach (var revitVersion in version.RevitVersions)
+                                {
+                                    if (revitVersion.Link != null)
+                                    {
+                                        <span class="badge bg-success text-capitalize">Revit @revitVersion.Number</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-light text-secondary">Revit @revitVersion.Number</span>
+                                    }
+                                }
+                            </div>
+                        </div>
+                    }
                 </div>
             </div>
         </div>
@@ -57,7 +87,7 @@
                 <div class="accordion-body">
                     <button class="btn btn-sm btn-light" type="button" disabled>
                         <span class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true"></span>
-                        Информация появится в ближайшее время
+                        Разработка
                     </button>
                 </div>
             </div>
@@ -72,16 +102,16 @@
                 <div class="accordion-body">
                     <button class="btn btn-sm btn-light" type="button" disabled>
                         <span class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true"></span>
-                        Информация появится в ближайшее время
+                        Разработка
                     </button>
                 </div>
             </div>
         </div>
     </div>
-    </br>
-    </br>
-    </br>
-    </br>
+    <br />
+    <br />
+    <br />
+    <br />
     <h1>Альфа-тестирование</h1>
     <p class="lead">Ваше участие поможет сделать нас лучше! Платформа в активной разработке, но это не мешает нам предоставить доступ к имеющимся решениям.</p>
     @if (User.IsInRole("Admin"))
@@ -91,10 +121,10 @@
         </div>
     }
     <div class="accordion" id="accordionDownload">
-        @if (Model.Count > 0)
+        @if (ViewBag.Applications.Count > 0)
         {
             int i = 0;
-            foreach (var app in Model)
+            foreach (var app in ViewBag.Applications)
             {
                 string className = "accordion-collapse collapse";
                 string buttonClassName = "accordion-button";
@@ -117,7 +147,7 @@
                     <div id="collapse-@i.ToString()" class="@className" aria-labelledby="heading-@i.ToString()" data-bs-parent="#accordionDownload">
                         <div class="accordion-body">
                             <p>@Html.Raw(app.Changelog)</p>
-                            @if (User.Identity.IsAuthenticated)
+                            @if (User.Identity.IsAuthenticated && !User.IsInRole("UnVerified") && !User.IsInRole("Expired"))
                             {
                                 @if (i == 0)
                                 {

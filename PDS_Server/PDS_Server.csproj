@@ -27,6 +27,7 @@
     <PackageReference Include="MongoDB.Driver" Version="2.13.0" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.12.0" />
     <PackageReference Include="Telegram.Bot" Version="16.0.2" />
+    <PackageReference Include="Telegram.Bot.Extensions.Polling" Version="0.2.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -49,6 +50,30 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Update="wwwroot\favicon.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Update="wwwroot\img\avatars\B-M_00.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Update="wwwroot\img\avatars\B-M_01.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Update="wwwroot\img\avatars\B-M_02.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Update="wwwroot\img\avatars\B-M_03.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Update="wwwroot\img\avatars\B-W_00.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Update="wwwroot\img\avatars\B-W_01.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Update="wwwroot\img\avatars\B-W_02.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Update="wwwroot\img\avatars\B-W_03.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Update="wwwroot\img\bernie-the-cat\business\001-love message.svg">
@@ -270,6 +295,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="CA.pem">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="docker-compose.yaml">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </None>
@@ -289,6 +317,7 @@
 
   <ItemGroup>
     <Folder Include="Views\Contacts\" />
+    <Folder Include="wwwroot\js\" />
   </ItemGroup>
 
 </Project>

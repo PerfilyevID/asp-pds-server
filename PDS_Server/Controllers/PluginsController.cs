@@ -57,7 +57,7 @@ namespace PDS_Server.Api
 
         [HttpPost]
         [Route("plugin")]
-        [Authorize(Roles = "Admin,User,TeamOwner")]
+        [Authorize(Roles = AccessGroups.APPROVED)]
         public async Task<IActionResult> Plugin([FromForm] string id, [FromForm] string version, [FromForm] string revitVersion)
         {
             try

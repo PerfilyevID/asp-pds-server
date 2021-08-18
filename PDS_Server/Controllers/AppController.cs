@@ -38,7 +38,7 @@ namespace PDS_Server.Api
         }
 
         [HttpGet]
-        [Authorize("Admin,User,TeamOwner")]
+        [Authorize(Roles = AccessGroups.APPROVED)]
         [Route("download/{name?}")]
         public async Task<IActionResult> Download(string name)
         {

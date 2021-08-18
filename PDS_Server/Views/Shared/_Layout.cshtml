@@ -18,7 +18,6 @@
         <div class="container-fluid">
             <a class="navbar-brand" href="/">
                 <img src="~/favicon-32x32.png" alt="" width="30" height="30" class="d-inline-block align-text-top">
-                <!--Revit<strong>Teams</strong>-->
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
@@ -74,7 +73,14 @@
                     </ul>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true">Команда</a>
+                        @if (User.Identity.IsAuthenticated && !User.IsInRole("UnVerified") && !User.IsInRole("Expired"))
+                        {
+                            <a class="nav-link" href="/team" tabindex="-1" aria-disabled="true">Команда</a>
+                        }
+                        else
+                        {
+                            <a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true">Команда</a>
+                        }
                     </li>
                     @if (User.IsInRole("Admin"))
                     {
@@ -90,7 +96,6 @@
     <div class="container">
         <main role="main" class="pb-3" style="margin-bottom:100px;">
             @RenderBody()
-            <div class="text-center">Стикеры сделаны <a href="https://www.flaticon.com/ru/authors/stickers" title="Stickers">Stickers</a> from <a href="https://www.flaticon.com/ru/" title="Flaticon">www.flaticon.com</a></div>
         </main>
     </div>
     <footer class="footer mt-auto py-3 bg-light">

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MongoDB.Bson;
+using System;
 
 namespace CommonEnvironment.Elements
 {
@@ -12,7 +13,7 @@ namespace CommonEnvironment.Elements
         public bool IsVerified { get; set; } = false;
 
         /// <summary>
-        /// Values: "Admin", "User", "TeamOwner", "NewUser", "Expired".
+        /// Values: "Admin", "Owner", "User", "Expired", "NewUser".
         /// </summary>
         public string Role { get; set; } = "NewUser";
 
@@ -25,8 +26,9 @@ namespace CommonEnvironment.Elements
         public DateTime Access { get; set; } = DateTime.Now;
 
         // Team
-        public string Team { get; set; } = null;
+        public ObjectId? Team { get; set; }
         public bool Owner { get; set; } = false;
+        public ObjectId Department { get; set; }
     }
 
 }

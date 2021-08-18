@@ -1,5 +1,6 @@
 using AspNetCore.Yandex.ObjectStorage;
 using CommonEnvironment.Elements;
+using CommonEnvironment.Elements.Revit;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.DataProtection;
@@ -14,8 +15,12 @@ using MongoDB.Driver;
 using PDS_Server.Repositories;
 using PDS_Server.Services;
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
+using System.Security.Authentication;
+using System.Security.Cryptography.X509Certificates;
 
 namespace PDS_Server
 {
@@ -31,7 +36,7 @@ namespace PDS_Server
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddSession(options => {
-                options.IdleTimeout = TimeSpan.FromMinutes(15);
+                options.IdleTimeout = TimeSpan.FromMinutes(60);
                 options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest; 
                 options.Cookie.SameSite = SameSiteMode.Strict; 
                 options.Cookie.HttpOnly = false;
@@ -57,14 +62,39 @@ namespace PDS_Server
                     };
                 });
 
-            services.AddSingleton<IMongoClient, MongoClient>(sp => new MongoClient(Configuration.GetConnectionString("MongoDb")));
+
+            var clientSettings = MongoClientSettings.FromUrl(new MongoUrl(Configuration.GetConnectionString("YandexDb")));
+            clientSettings.SslSettings = new SslSettings();
+            clientSettings.UseTls = true;
+            clientSettings.SslSettings.ClientCertificates = new List<X509Certificate>() { new X509Certificate("CA.pem") };
+            clientSettings.SslSettings.EnabledSslProtocols = SslProtocols.Tls13 | SslProtocols.Tls12 | SslProtocols.Tls11 | SslProtocols.Tls;
+            clientSettings.SslSettings.ClientCertificateSelectionCallback = (sender, host, certificates, certificate, issuers) => clientSettings.SslSettings.ClientCertificates.First();
+            clientSettings.SslSettings.ServerCertificateValidationCallback = (sender, certificate, chain, errors) => true;
+
+            services.AddSingleton<IMongoClient, MongoClient>(sp => new MongoClient(clientSettings));
+
+            //services.AddSingleton<IMongoClient, MongoClient>(sp => new MongoClient(Configuration.GetConnectionString("YandexCluster")));
             services.AddTransient<IMongoRepository<DbAccount>, MongoRepository<DbAccount>>();
             services.AddTransient<IMongoRepository<DbPlugin>, MongoRepository<DbPlugin>>();
             services.AddTransient<IMongoRepository<DbApplication>, MongoRepository<DbApplication>>();
             services.AddTransient<IMongoRepository<DbTeam>, MongoRepository<DbTeam>>();
             services.AddTransient<IMongoRepository<DbReport>, MongoRepository<DbReport>>();
             services.AddTransient<IMongoRepository<DbException>, MongoRepository<DbException>>();
+
             services.AddTransient<IEmailSender, YandexSender>();
+
+            services.AddTransient<IMongoRepository<DbDepartment>, MongoRepository<DbDepartment>>();
+            services.AddTransient<IMongoRepository<DbChat>, MongoRepository<DbChat>>();
+            services.AddTransient<IMongoRepository<DbClashResult>, MongoRepository<DbClashResult>>();
+            services.AddTransient<IMongoRepository<DbProject>, MongoRepository<DbProject>>();
+            services.AddTransient<IMongoRepository<DbDocument>, MongoRepository<DbDocument>>();
+            services.AddTransient<IMongoRepository<DbTask>, MongoRepository<DbTask>>();
+            services.AddTransient<IMongoRepository<DbCheckResult>, MongoRepository<DbCheckResult>>();
+
+            services.AddTransient<IMongoRepository<DbFamily>, MongoRepository<DbFamily>>();
+            services.AddTransient<IMongoRepository<DbFamilyCategory>, MongoRepository<DbFamilyCategory>>();
+
+            services.AddTransient<IBot, TelegramBot>();
 
             services.AddControllersWithViews();
 

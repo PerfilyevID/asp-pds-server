@@ -1,7 +1,9 @@
 ﻿using CommonEnvironment.Elements;
+using CommonEnvironment.Elements.Revit;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace PDS_Server.Repositories
@@ -9,17 +11,47 @@ namespace PDS_Server.Repositories
     public class MongoRepository<T> : IMongoRepository<T>
         where T : DbElement
     {
+        private readonly Dictionary<string, IMongoCollection<T>> _targetCollections = new Dictionary<string, IMongoCollection<T>>();
         private readonly IMongoCollection<T> _collection;
+        private readonly IMongoDatabase _dataBase;
+
+        private void PrepareTeamCollection(string teamId)
+        {
+            if (!_targetCollections.Keys.ToArray().Contains(teamId))
+            {
+                _targetCollections.Add(teamId, _dataBase.GetCollection<T>(string.Format("{0}_{1}", typeof(T).Name.Remove(0, 2), teamId)));
+            }
+        }
         public MongoRepository(IMongoClient client)
         {
-            var database = client.GetDatabase("RT-Cluster-Db");
-            var collection = database.GetCollection<T>(typeof(T).Name.Remove(0,2));
+            _dataBase = client.GetDatabase("rt-db");
+            var collection = _dataBase.GetCollection<T>(typeof(T).Name.Remove(0,2));
             _collection = collection;
         }
         public async Task<ObjectId> Create(T element)
         {
             await _collection.InsertOneAsync(element);
             return element.Id;
+        }
+        public async Task<ObjectId> Create(T element, string teamId)
+        {
+            PrepareTeamCollection(teamId);
+            if (_targetCollections.TryGetValue(teamId, out IMongoCollection<T> teamCollection))
+            {
+                await teamCollection.InsertOneAsync(element);
+            }
+            return element.Id;
+        }
+        public async Task<bool> Delete(ObjectId objectId, string teamId)
+        {
+            PrepareTeamCollection(teamId);
+            if (_targetCollections.TryGetValue(teamId, out IMongoCollection<T> teamCollection))
+            {
+                FilterDefinition<T> filter = Builders<T>.Filter.Eq(c => c.Id, objectId);
+                DeleteResult result = await teamCollection.DeleteOneAsync(filter);
+                return result.DeletedCount == 1;
+            }
+            return false;
         }
         public async Task<bool> Delete(ObjectId objectId)
         {
@@ -33,69 +65,42 @@ namespace PDS_Server.Repositories
             T element = await _collection.Find(filter).FirstOrDefaultAsync();
             return element;
         }
+        public async Task<T> Get(ObjectId objectId, string teamId)
+        {
+            PrepareTeamCollection(teamId);
+            if (_targetCollections.TryGetValue(teamId, out IMongoCollection<T> teamCollection))
+            {
+                FilterDefinition<T> filter = Builders<T>.Filter.Eq(c => c.Id, objectId);
+                T element = await teamCollection.Find(filter).FirstOrDefaultAsync();
+                return element;
+            }
+            return null;
+        }
         public async Task<IEnumerable<T>> Get()
         {
             IEnumerable<T> elements = await _collection.Find(_ => true).ToListAsync();
             return elements;
         }
+        public async Task<IEnumerable<T>> Get(string teamId)
+        {
+            PrepareTeamCollection(teamId);
+            if (_targetCollections.TryGetValue(teamId, out IMongoCollection<T> teamCollection))
+            {
+                IEnumerable<T> elements = await _collection.Find(_ => true).ToListAsync();
+                return elements;
+            }
+            return new T[] { };
+        }
         public async Task<bool> Update(ObjectId objectId, T element)
         {
-            FilterDefinition<T> filter = Builders<T>.Filter.Eq(c => c.Id, objectId);
-            if (typeof(T) == typeof(DbAccount))
+            return await LocalMongoDbUtills<T>.Update(_collection, objectId, element);
+        }
+        public async Task<bool> Update(ObjectId objectId, T element, string teamId)
+        {
+            PrepareTeamCollection(teamId);
+            if (_targetCollections.TryGetValue(teamId, out IMongoCollection<T> teamCollection))
             {
-                UpdateDefinition<T> update = Builders<T>.Update
-                    .Set(e => (e as DbAccount).SecondName, (element as DbAccount).SecondName)
-                    .Set(e => (e as DbAccount).ImageData, (element as DbAccount).ImageData)
-                    .Set(e => (e as DbAccount).IsVerified, (element as DbAccount).IsVerified)
-                    .Set(e => (e as DbAccount).Login, (element as DbAccount).Login)
-                    .Set(e => (e as DbAccount).FirstName, (element as DbAccount).FirstName)
-                    .Set(e => (e as DbAccount).Owner, (element as DbAccount).Owner)
-                    .Set(e => (e as DbAccount).Password, (element as DbAccount).Password)
-                    .Set(e => (e as DbAccount).Access, (element as DbAccount).Access)
-                    .Set(e => (e as DbAccount).Role, (element as DbAccount).Role)
-                    .Set(e => (e as DbAccount).Team, (element as DbAccount).Team);
-                UpdateResult result = await _collection.UpdateOneAsync(filter, update);
-                return result.ModifiedCount == 1;
-            }
-            else if (typeof(T) == typeof(DbPlugin))
-            {
-                UpdateDefinition<T> update = Builders<T>.Update
-                    .Set(e => (e as DbPlugin).Description, (element as DbPlugin).Description)
-                    .Set(e => (e as DbPlugin).Name, (element as DbPlugin).Name)
-                    .Set(e => (e as DbPlugin).Versions, (element as DbPlugin).Versions);
-                UpdateResult result = await _collection.UpdateOneAsync(filter, update);
-                return result.ModifiedCount == 1;
-            }
-            else if (typeof(T) == typeof(DbApplication))
-            {
-                UpdateDefinition<T> update = Builders<T>.Update
-                    .Set(e => (e as DbApplication).Changelog, (element as DbApplication).Changelog)
-                    .Set(e => (e as DbApplication).Link, (element as DbApplication).Link)
-                    .Set(e => (e as DbApplication).Version, (element as DbApplication).Version);
-                UpdateResult result = await _collection.UpdateOneAsync(filter, update);
-                return result.ModifiedCount == 1;
-            }
-            else if(typeof(T) == typeof(DbTeam))
-            {
-                UpdateDefinition<T> update = Builders<T>.Update
-                    .Set(e => (e as DbTeam).MaxCount, (element as DbTeam).MaxCount)
-                    .Set(e => (e as DbTeam).Name, (element as DbTeam).Name)
-                    .Set(e => (e as DbTeam).Users, (element as DbTeam).Users)
-                    .Set(e => (e as DbTeam).Owner, (element as DbTeam).Owner);
-                UpdateResult result = await _collection.UpdateOneAsync(filter, update);
-                return result.ModifiedCount == 1;
-            }
-            else if (typeof(T) == typeof(DbReport))
-            {
-                UpdateDefinition<T> update = Builders<T>.Update
-                    .Set(e => (e as DbReport).Comment, (element as DbReport).Comment)
-                    .Set(e => (e as DbReport).Description, (element as DbReport).Description)
-                    .Set(e => (e as DbReport).IsClosed, (element as DbReport).IsClosed)
-                    .Set(e => (e as DbReport).Issue, (element as DbReport).Issue)
-                    .Set(e => (e as DbReport).Link, (element as DbReport).Link)
-                    .Set(e => (e as DbReport).Time, (element as DbReport).Time);
-                UpdateResult result = await _collection.UpdateOneAsync(filter, update);
-                return result.ModifiedCount == 1;
+                return await LocalMongoDbUtills<T>.Update(teamCollection, objectId, element);
             }
             return false;
         }

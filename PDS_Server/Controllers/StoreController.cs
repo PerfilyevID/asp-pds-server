@@ -12,6 +12,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using CommonEnvironment.Elements;
 using MongoDB.Bson;
+using PDS_Server;
 
 namespace RevitTeams_Server.Controllers
 {
@@ -30,7 +31,7 @@ namespace RevitTeams_Server.Controllers
 
         [HttpPost]
         [Route("plugins")]
-        [Authorize(Roles = "Admin,User")]
+        [Authorize(Roles = AccessGroups.APPROVED)]
         public async Task<IActionResult> Plugins([FromForm] string version)
         {
             var data = new List<object>();
@@ -61,7 +62,7 @@ namespace RevitTeams_Server.Controllers
 
         [HttpPost]
         [Route("plugin")]
-        [Authorize(Roles = "Admin,User")]
+        [Authorize(Roles = AccessGroups.APPROVED)]
         public async Task<IActionResult> Plugin([FromForm] string id, [FromForm] string version, [FromForm] string revitVersion)
         {
             try
@@ -99,8 +100,9 @@ namespace RevitTeams_Server.Controllers
                 }
             }
             await _pluginRepository.Update(plugin.Id, plugin);
-            return View("index", await _pluginRepository.Get());
+            return RedirectToAction("index", "store");
         }
+
         [HttpGet]
         [Route("hide")]
         public async Task<IActionResult> Hide(string id, string number)
@@ -115,7 +117,7 @@ namespace RevitTeams_Server.Controllers
                 }
             }
             await _pluginRepository.Update(plugin.Id, plugin);
-            return View("index", await _pluginRepository.Get());
+            return RedirectToAction("index", "store");
         }
 
         [HttpPost]
@@ -169,8 +171,7 @@ namespace RevitTeams_Server.Controllers
         {
             if (string.IsNullOrEmpty(title) || string.IsNullOrEmpty(description) || string.IsNullOrEmpty(target) || string.IsNullOrEmpty(version)) 
             {
-                ViewBag.Alert = "Fill all required inputs.";
-                return View("index"); 
+                return RedirectToAction("index", "store", new { message = 0 }); 
             }
             DbPlugin p = new DbPlugin()
             {
@@ -196,7 +197,7 @@ namespace RevitTeams_Server.Controllers
             DbPlugin target = await _pluginRepository.Get(new MongoDB.Bson.ObjectId(plugin));
             DbRevitVersionInstance versionToDelete = target.Versions.Where(x => x.Number == version).First().RevitVersions.Where(x => x.Number == revitVersion && x.Link == link).First();
             await DeleteFile(target, versionToDelete);
-            return RedirectToAction("index");
+            return RedirectToAction("index", "store");
         }
 
         [HttpPost]
@@ -206,7 +207,7 @@ namespace RevitTeams_Server.Controllers
             if (file != null && !string.IsNullOrEmpty(target))
             {
                 string[] data = target.Split(':');
-                DbPlugin plugin = await _pluginRepository.Get(new MongoDB.Bson.ObjectId(data[0]));
+                DbPlugin plugin = await _pluginRepository.Get(new ObjectId(data[0]));
                 DbVersion version = plugin.Versions.Where(x => x.Number == data[1]).First();
                 DbRevitVersionInstance revitVersion = version.RevitVersions.Where(x => x.Number == data[2]).First();
                 if (file.FileName.Split('.').Last().ToLower() == "zip") 
@@ -218,8 +219,19 @@ namespace RevitTeams_Server.Controllers
         [HttpGet]
         [Route("index")]
         [Route("")]
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(int? message)
         {
+            if(message != null)
+            {
+                switch(message)
+                {
+                    case 0:
+                        ViewBag.Alert = "Необходимо заполнить все обязательные поля!";
+                        break;
+                    default:
+                        break;
+                }
+            }
             return View(await _pluginRepository.Get());
         }
 

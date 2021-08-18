@@ -20,12 +20,14 @@ namespace PDS_Server.Controllers
     public class SupportController : Controller
     {
         private readonly IMongoRepository<DbReport> _reportRepository;
-        private static IMongoRepository<DbAccount> _accountRepository;
-        private static IMongoRepository<DbException> _exceptionRepository;
+        private readonly IMongoRepository<DbAccount> _accountRepository;
+        private readonly IMongoRepository<DbException> _exceptionRepository;
+        private readonly IBot _bot;
         private readonly YandexStorageService _yandexOptions;
-        private static IEmailSender _mailClient;
-        public SupportController(IMongoRepository<DbException> exceptionRepository, IMongoRepository<DbReport> reportRepository, IEmailSender mailClient, IMongoRepository<DbAccount> accountRepository, IOptions<YandexStorageOptions> yandexOptions)
+        private readonly IEmailSender _mailClient;
+        public SupportController(IBot bot, IMongoRepository<DbException> exceptionRepository, IMongoRepository<DbReport> reportRepository, IEmailSender mailClient, IMongoRepository<DbAccount> accountRepository, IOptions<YandexStorageOptions> yandexOptions)
         {
+            _bot = bot;
             _exceptionRepository = exceptionRepository;
             _reportRepository = reportRepository;
             _accountRepository = accountRepository;
@@ -43,6 +45,8 @@ namespace PDS_Server.Controllers
                 if(!ddd.Contains(data))
                 {
                     await _exceptionRepository.Create(new DbException() { User = user, Time = time, Data = data, Plugin = plugin });
+                    try { await _bot.SendMessage($"☠️ От:{user}\n{data}\n{plugin}", BuiltInChatId.Channel_Errors); }
+                    catch { }
                 }
                 return Ok();
             }
@@ -120,8 +124,31 @@ namespace PDS_Server.Controllers
         [Route("index")]
         [Route("")]
         [HttpGet]
-        public IActionResult Index()
+        public IActionResult Index(int? message)
         {
+            if (message != null)
+            {
+                switch (message)
+                {
+                    case 0:
+                        ViewBag.Alert = "Неизвестный формат!";
+                        break;
+                    case 1:
+                        ViewBag.Alert = "Формат не поддерживается!";
+                        break;
+                    case 2:
+                        ViewBag.Success = "Обращение отправлено в поддержку!";
+                        break;
+                    case 3:
+                        ViewBag.Alert = "Файл слишком большой!";
+                        break;
+                    case 4:
+                        ViewBag.Alert = "Неизвестная ошибка!";
+                        break;
+                    default:
+                        break;
+                }
+            }
             return View();
         }
 
@@ -134,44 +161,49 @@ namespace PDS_Server.Controllers
             string[] formats = new string[] { "jpeg", "png", "bmp", "gif", "tga", "jpg", "tif", "tiff" };
             if (file != null)
             {
+                if(file.Length >= 500000)
+                {
+                    return RedirectToAction("index", "support", new { message = 3 });
+                }
                 if (!file.FileName.Contains('.'))
                 {
-                    ViewBag.Alert = "Неизвестный формат!";
-                    return View("Index");
+                    return RedirectToAction("index", "support", new { message = 0 });
                 }
                 if (!formats.Contains(file.FileName.Split('.').Last()))
                 {
-                    ViewBag.Alert = "Формат не поддерживается!";
-                    return View("Index");
+                    return RedirectToAction("index", "support", new { message = 1 });
                 }
             }
-
             DbAccount user = await GetUser(User.Identity.Name);
             DbReport report = new DbReport() { Issue = issue, Description = description, IsClosed = false, User = user.Login };
             report.Id = await _reportRepository.Create(report);
             if (file != null) await SaveFile(file, report);
             await _mailClient.SendMessageAsync(Person.GetRandomPerson(), "Поддержка", Local.EmailTemplate.LayoutSupportCreated, $"http://{Request.Host.Value}/support/report/{report.Id}", user.Login, "support");
-            ViewBag.Success = "Обращение отправлено в поддержку!";
-            return View("Index");
+            try { await _bot.SendMessage($"😱 Новое обращение: {issue}\n{description}", BuiltInChatId.Channel_Errors); }
+            catch { }
+            return RedirectToAction("index", "support", new { message = 2 });
         }
 
         [Route("sendguest")]
         [Route("")]
         [HttpPost]
+        [RequestFormLimits(MultipartBodyLengthLimit = 5242880)]//5mb
         public async Task<IActionResult> SendGuest([FromForm] string issue, [FromForm] string description, [FromForm] IFormFile file, [FromForm] string email)
         {
             string[] formats = new string[] { "jpeg", "png", "bmp", "gif", "tga", "jpg", "tif", "tiff" };
             if(file != null)
             {
+                if (file.Length >= 500000)
+                {
+                    return RedirectToAction("index", "support", new { message = 3 });
+                }
                 if (!file.FileName.Contains('.'))
                 {
-                    ViewBag.Alert = "Неизвестный формат!";
-                    return View("Index");
+                    return RedirectToAction("index", "support", new { message = 0 });
                 }
                 if (!formats.Contains(file.FileName.Split('.').Last()))
                 {
-                    ViewBag.Alert = "Формат не поддерживается!";
-                    return View("Index");
+                    return RedirectToAction("index", "support", new { message = 1 });
                 }
             }
 
@@ -181,15 +213,15 @@ namespace PDS_Server.Controllers
             try
             {
                 await _mailClient.SendMessageAsync(Person.GetRandomPerson(), "Поддержка", Local.EmailTemplate.LayoutSupportCreated, $"http://{Request.Host.Value}/support/report/{report.Id}", email, "support");
-                ViewBag.Success = "Обращение отправлено в поддержку!";
-                return View("Index");
+                try { await _bot.SendMessage($"😱 Новое обращение: {issue}\n{description}", BuiltInChatId.Channel_Errors); }
+                catch { }
+                return RedirectToAction("index", "support", new { message = 2 });
             }
             catch
             {
                 if (file != null) await DeleteFile(report);
                 await _reportRepository.Delete(report.Id);
-                ViewBag.Alert = "Ошибка";
-                return View("Index");
+                return RedirectToAction("index", "support", new { message = 4 });
             }
         }
         #region Private
@@ -216,7 +248,7 @@ namespace PDS_Server.Controllers
         {
             return await _yandexOptions.GetAsStreamAsync($"Reports/{name}");
         }
-        private static async Task<DbAccount> GetUser(string email)
+        private async Task<DbAccount> GetUser(string email)
         {
             string login;
             if (!email.ValidateEmail(out login)) return null;

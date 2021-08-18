@@ -10,7 +10,7 @@ namespace CommonEnvironment.Elements
     {
         public DbTeam() { }
         public string Name { get; set; }
-        public ObjectId Owner { get; set; }
+        public ObjectId? Owner { get; set; }
         public ObjectId[] Users { get; set; }
         public int MaxCount { get; set; }
     }

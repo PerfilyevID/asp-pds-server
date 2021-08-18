@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using PDS_Server.Repositories;
+using PDS_Server.Services;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -18,9 +19,11 @@ namespace PDS_Server.Controllers
     public class HomeController : Controller
     {
         private readonly IMongoRepository<DbApplication> _applicationRepository;
+        private readonly IMongoRepository<DbPlugin> _pluginRepository;
         private readonly YandexStorageService _yandexOptions;
-        public HomeController(IMongoRepository<DbApplication> applicationRepository, IOptions<YandexStorageOptions> yandexOptions)
+        public HomeController(IMongoRepository<DbPlugin> pluginRepository, IMongoRepository<DbApplication> applicationRepository, IOptions<YandexStorageOptions> yandexOptions)
         {
+            _pluginRepository = pluginRepository;
             _applicationRepository = applicationRepository;
             _yandexOptions = yandexOptions.Value.CreateYandexObjectService();
         }
@@ -29,13 +32,17 @@ namespace PDS_Server.Controllers
         [HttpGet]
         public async Task<IActionResult> Index()
         {
-            var data = (await _applicationRepository.Get()).ToList();
-            data.Reverse();
-            return View("Index", data);
+            var appData = (await _applicationRepository.Get()).ToList();
+            appData.Reverse();
+            ViewBag.Applications = appData;
+            var pluginData = (await _pluginRepository.Get()).ToList();
+            pluginData.Reverse();
+            ViewBag.Plugins = pluginData;
+            return View("index");
         }
 
         [HttpGet]
-        [Authorize]
+        [Authorize(Roles= AccessGroups.APPROVED)]
         [Route("download/{name?}")]
         public async Task<IActionResult> Download(string name)
         {
@@ -49,6 +56,7 @@ namespace PDS_Server.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = AccessGroups.ADMIN)]
         [Route("addversion")]
         public async Task<IActionResult> AddVersion([FromForm] IFormFile file, [FromForm] string version, [FromForm] string changelog)
         {
@@ -65,6 +73,7 @@ namespace PDS_Server.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = AccessGroups.ADMIN)]
         [Route("deleteversion/{id?}")]
         public async Task<IActionResult> DeleteVersion(string id)
         {

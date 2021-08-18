@@ -20,6 +20,7 @@ using System.IO;
 using System.Threading;
 using AspNetCore.Yandex.ObjectStorage;
 using Microsoft.Extensions.Options;
+using Microsoft.AspNetCore.Routing;
 
 namespace PDS_Server.Controllers
 {
@@ -27,12 +28,16 @@ namespace PDS_Server.Controllers
     [Route("user")]
     public class UserController : Controller
     {
-        private static IMongoRepository<DbAccount> _accountRepository;
-        private static IMongoRepository<DbTeam> _teamRepository;
-        private static IEmailSender _mailClient;
+        private readonly IMongoRepository<DbAccount> _accountRepository;
+        private readonly IMongoRepository<DbDepartment> _departmentRepository;
+        private readonly IMongoRepository<DbTeam> _teamRepository;
+        private readonly IEmailSender _mailClient;
+        private readonly IBot _bot;
         private readonly YandexStorageService _yandexOptions;
-        public UserController(IMongoRepository<DbTeam> teamRepository, IMongoRepository<DbAccount> accountRepository, IEmailSender mailClient, IOptions<YandexStorageOptions> yandexOptions) 
+        public UserController(IBot bot, IMongoRepository<DbDepartment> departmentRepository, IMongoRepository<DbTeam> teamRepository, IMongoRepository<DbAccount> accountRepository, IEmailSender mailClient, IOptions<YandexStorageOptions> yandexOptions) 
         {
+            _bot = bot;
+            _departmentRepository = departmentRepository;
             _teamRepository = teamRepository;
             _accountRepository = accountRepository;
             _mailClient = mailClient;
@@ -53,7 +58,7 @@ namespace PDS_Server.Controllers
         }
 
         [HttpGet]
-        [Authorize("Admin")]
+        [Authorize(Roles = AccessGroups.ADMIN)]
         [Route("list")]
         public async Task<IActionResult> List()
         {
@@ -67,9 +72,20 @@ namespace PDS_Server.Controllers
 
         [HttpGet]
         [Route("login")]
-        public IActionResult Login()
+        public IActionResult Login(int? message)
         {
             if (User.Identity.IsAuthenticated) return RedirectToAction("index", "home");
+            if (message != null)
+            {
+                switch (message)
+                {
+                    case 0:
+                        ViewBag.Alert = "Пользователь не найден!";
+                        break;
+                    default:
+                        break;
+                }
+            }
             return View();
         }
 
@@ -90,8 +106,7 @@ namespace PDS_Server.Controllers
                 var identity = await GetAccount(email, password);
                 if (identity == null)
                 {
-                    ViewBag.Alert = "Invalid username or password.";
-                    return View();
+                    return RedirectToAction("login", "user", new { message = 0 });
                 }
                 DateTime now = DateTime.UtcNow;
                 DateTime expires = DateTime.UtcNow.Add(TimeSpan.FromMinutes(AuthOptions.LIFETIME));
@@ -112,28 +127,57 @@ namespace PDS_Server.Controllers
 
         [HttpGet]
         [Route("register")]
-        public async Task<IActionResult> Register()
+        public async Task<IActionResult> Register(int? message)
         {
             if (User.Identity.IsAuthenticated) return RedirectToAction("index", "home");
+            var departments = await _departmentRepository.Get();
+            ViewBag.Departments = await _departmentRepository.Get();
+            if (message != null)
+            {
+                switch(message)
+                {
+                    case 0:
+                        ViewBag.Alert = "Неизвестная ошибка!";
+                        break;
+                    case 1:
+                        ViewBag.Alert = "Команда не найдена!";
+                        break;
+                    case 2:
+                        ViewBag.Alert = "Превышен лимит пользователей на одну команду!";
+                        break;
+                    case 3:
+                        ViewBag.Alert = "Пользователь с таким адресом уже существует!";
+                        break;
+                    case 4:
+                        ViewBag.Alert = "Проверьте правильность электронного адреса!";
+                        break;
+                    default:
+                        break;
+                }
+            }
             return View(await GetAgreement("agreement.txt", _yandexOptions));
         }
 
         [HttpPost]
         [Route("register")]
-        public async Task<IActionResult> Register([FromForm] string team, [FromForm] string password, [FromForm] string email, [FromForm] string firstName, [FromForm] string lastName)
+        public async Task<IActionResult> Register([FromForm] string team, [FromForm] string password, [FromForm] string email, [FromForm] string firstName, [FromForm] string lastName, [FromForm] string department)
         {
+            var depSearch = (await _departmentRepository.Get()).Where(x => x.Name == department);
+            if(!depSearch.Any())
+            {
+                return RedirectToAction("register", "user", new { message = 0 });
+            }
+            DbDepartment dep = depSearch.First();
             DbTeam joinTeam = null;
             try { joinTeam = (await _teamRepository.Get()).Where(x => team.ToLower() == $"@{x.Name.ToLower()}").First(); }
             catch { }
-            if(joinTeam == null)
+            if (joinTeam == null)
             {
-                ViewBag.Alert = "Команда не найдена!";
-                return View();
+                return RedirectToAction("register", "user", new { message = 1 });
             }
             if (joinTeam.MaxCount <= joinTeam.Users.Length)
             {
-                ViewBag.Alert = "Превышен лимит пользователей на одну команду!";
-                return View();
+                return RedirectToAction("register", "user", new { message = 2 });
             }
             try
             {
@@ -142,8 +186,7 @@ namespace PDS_Server.Controllers
                 {
                     if (await UserExist(normalized))
                     {
-                        ViewBag.Alert = "Пользователь уже существует!";
-                        return View();
+                        return RedirectToAction("register", "user", new { message = 3 });
                     }
                     DbAccount account = new DbAccount()
                     {
@@ -151,21 +194,25 @@ namespace PDS_Server.Controllers
                         Password = password.ConvertToHash(),
                         FirstName = firstName,
                         SecondName = lastName,
-                        VerifyLink = Guid.NewGuid().ToString()
+                        VerifyLink = Guid.NewGuid().ToString(),
+                        Department = dep.Id,
+                        Team = joinTeam.Id,
+                        Role = AccessGroups.GetRole(AccessGroups.Roles.UnVerified)
                     };
-                    await _mailClient.SendMessageAsync(Person.Persons[0], "Подтверждение регистрации", Local.EmailTemplate.LayoutConfirm, $"http://{Request.Host.Value}/user/verify/{account.VerifyLink}", account.Login, "noreply");
+                    await _mailClient.SendMessageAsync(Person.GetRandomPerson(), "Подтверждение регистрации", Local.EmailTemplate.LayoutConfirm, $"http://{Request.Host.Value}/user/verify/{account.VerifyLink}", account.Login, "noreply");
                     ObjectId id = await _accountRepository.Create(account);
                     var list = joinTeam.Users.ToList();
                     list.Add(id);
                     joinTeam.Users = list.ToArray();
                     await _teamRepository.Update(joinTeam.Id, joinTeam);
-                    return View("Redirect", new RedirectModel() { Title = "Успешная регистрация", Header = "Спасибо за регистрацию!", Quote= "Ураа!", Sticker= "business/018-trophy.svg", Body = string.Format("Мы отправили ссылку для подтверждения вашего адреса электронной почты: {0}", account.Login), Action="", Controller="" });
+                    try { await _bot.SendMessage($"Регистрация 💪: @{joinTeam.Name}\n{normalized} ({lastName} {firstName})", BuiltInChatId.Channel_Errors); }
+                    catch { }
+                    return View("redirect", new RedirectModel() { Title = "Успешная регистрация", Header = "Спасибо за регистрацию!", Quote= "Ураа!", Sticker= "business/018-trophy.svg", Body = string.Format("Мы отправили ссылку для подтверждения вашего адреса электронной почты: {0}", account.Login), Action="", Controller="" });
                 }
-                else { ViewBag.Alert = "Некорректный email!"; }
-                return View(await GetAgreement("agreement.txt", _yandexOptions));
+                return RedirectToAction("register", "user", new { message = 4 });
             }
             catch { }
-            return View(await GetAgreement("agreement.txt", _yandexOptions));
+            return RedirectToAction("register", "user");
         }
         [HttpPost]
         [Route("token")]
@@ -177,7 +224,7 @@ namespace PDS_Server.Controllers
         }
 
         [HttpGet]
-        [Authorize]
+        [Authorize(Roles = AccessGroups.APPROVED)]
         [Route("token")]
         public async Task<IActionResult> Token()
         {
@@ -199,6 +246,7 @@ namespace PDS_Server.Controllers
                     if (!account.IsVerified)
                     {
                         account.IsVerified = true;
+                        account.Role = AccessGroups.GetRole(AccessGroups.Roles.TeamMate);
                         account.Access = DateTime.UtcNow.AddMonths(1);
                         await _accountRepository.Update(account.Id, account);
                         Person person = Person.Persons[0];
@@ -329,7 +377,7 @@ namespace PDS_Server.Controllers
 
             return new JwtSecurityTokenHandler().WriteToken(jwt);
         }
-        private static async Task<ClaimsIdentity> GetAccount(string email, string password = null)
+        private async Task<ClaimsIdentity> GetAccount(string email, string password = null)
         {
             string login;
             List<DbAccount> collection;
@@ -363,7 +411,7 @@ namespace PDS_Server.Controllers
         {
             return (await GetUser(email)) != null;
         }
-        private static async Task<DbAccount> GetUser(string email)
+        private async Task<DbAccount> GetUser(string email)
         {
             string login;
             if (!email.ValidateEmail(out login)) return null;

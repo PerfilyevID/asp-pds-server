@@ -24,7 +24,6 @@
                         Публичное альфа-тестирование доступно только для комманд
                     </div>
                 </div>
-
                 <div class="col-md-12">
                     <label for="staticEmail" class="form-label">Email</label>
                     <input type="email" class="form-control" id="staticEmail" name="email" required>
@@ -52,6 +51,15 @@
                 <div class="col-md-12">
                     <label for="validationCustom04" class="form-label">Фамилия</label>
                     <input type="text" class="form-control" id="validationCustom04" name="lastName" placeholder=@lpn[rnd] required>
+                </div>
+                <div class="col-md-12">
+                    <label for="department_form" class="form-label">Отдел</label>
+                    <select class="form-select" id="department_form" name="department" required>
+                        @foreach(var d in ViewBag.Departments)
+                        {
+                            <option value="@d.Name">@d.Description</option>
+                        }
+                    </select>
                 </div>
                 <div class="col-12" style="margin-top: 2rem; margin-bottom:1rem;">
                     <div class="form-check">
