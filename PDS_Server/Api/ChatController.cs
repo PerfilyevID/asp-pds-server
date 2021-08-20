@@ -4,6 +4,7 @@ using PDS_Server.Elements;
 using PDS_Server.Elements.Communications;
 using PDS_Server.Elements.Revit;
 using PDS_Server.Repositories;
+using PDS_Server.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,8 +19,10 @@ namespace PDS_Server.Api
         private readonly IMongoRepository<DbAccount> _accountRepository;
         private readonly IMongoRepository<DbClashResult> _clashResultRepository;
         private readonly IMongoRepository<DbChat> _chatRepository;
-        public ChatController(IMongoRepository<DbChat> chatRepository, IMongoRepository<DbClashResult> documentRepository, IMongoRepository<DbAccount> accountRepository)
+        private readonly IBot _bot;
+        public ChatController(IBot bot, IMongoRepository<DbChat> chatRepository, IMongoRepository<DbClashResult> documentRepository, IMongoRepository<DbAccount> accountRepository)
         {
+            _bot = bot;
             _chatRepository = chatRepository;
             _clashResultRepository = documentRepository;
             _accountRepository = accountRepository;
@@ -29,11 +32,18 @@ namespace PDS_Server.Api
         [HttpGet]
         public async Task<IActionResult> Chat(string id)
         {
-            DbAccount user = await GetUser(User.Identity.Name);
-            var result = await _chatRepository.Get(new ObjectId(id), user.Team.ToString());
-            if (result != null)
+            try
             {
-                return Ok(result.ToResponse());
+                DbAccount user = await GetUser(User.Identity.Name);
+                var result = await _chatRepository.Get(new ObjectId(id), user.Team.ToString());
+                if (result != null)
+                {
+                    return Ok(result.ToResponse());
+                }
+            }
+            catch (Exception e)
+            {
+                await _bot.SendException(e);
             }
             return NotFound();
         }
@@ -62,7 +72,10 @@ namespace PDS_Server.Api
                     return Ok();
                 }
             }
-            catch { }
+            catch (Exception e)
+            {
+                await _bot.SendException(e);
+            }
             return BadRequest();
         }
 
@@ -77,7 +90,7 @@ namespace PDS_Server.Api
                 if (result != null)
                 {
                     var messages = result.Messages.ToList();
-                    if(messages[number].From == user.Id)
+                    if (messages[number].From == user.Id)
                     {
                         messages.RemoveAt(number);
                     }
@@ -86,7 +99,10 @@ namespace PDS_Server.Api
                     return Ok();
                 }
             }
-            catch { }
+            catch (Exception e)
+            {
+                await _bot.SendException(e);
+            }
             return BadRequest();
         }
         #region Private
