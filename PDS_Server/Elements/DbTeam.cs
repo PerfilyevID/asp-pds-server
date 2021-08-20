@@ -1,10 +1,6 @@
 ﻿using MongoDB.Bson;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
-namespace CommonEnvironment.Elements
+namespace PDS_Server.Elements
 {
     public class DbTeam : DbElement
     {

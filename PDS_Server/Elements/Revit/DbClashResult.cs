@@ -1,16 +1,12 @@
 ﻿using MongoDB.Bson;
-using PDS_Server.Elements.Revit;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
-namespace CommonEnvironment.Elements
+namespace PDS_Server.Elements.Revit
 {
     public class DbClashResult : DbElement
     {
         public DbClashResult() { }
-        public ObjectId? Project { get; set; }
+        public ObjectId? Group { get; set; }
         public DbClash[] Clashes { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }

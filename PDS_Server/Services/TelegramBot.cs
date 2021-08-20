@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Telegram.Bot;
-using Telegram.Bot.Extensions.Polling;
 using Telegram.Bot.Types;
 
 namespace PDS_Server.Services
@@ -11,6 +9,7 @@ namespace PDS_Server.Services
     public interface IBot
     {
         Task<Message> SendMessage(string message, BuiltInChatId chat);
+        Task<Message> SendException(Exception e);
     }
 
     public enum BuiltInChatId
@@ -33,6 +32,20 @@ namespace PDS_Server.Services
             { 
                 return await Client.SendTextMessageAsync(id, message); 
             }
+            return null;
+        }
+
+        public async Task<Message> SendException(Exception e)
+        {
+            try 
+            { 
+                if(e.InnerException != null)
+                {
+                    await SendException(e.InnerException);
+                }
+                return await SendMessage($"🎃: @{e.Message}\n{e.StackTrace}", BuiltInChatId.Channel_Errors);
+            }
+            catch { }
             return null;
         }
     }

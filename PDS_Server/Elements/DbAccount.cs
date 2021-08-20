@@ -1,7 +1,7 @@
 ﻿using MongoDB.Bson;
 using System;
 
-namespace CommonEnvironment.Elements
+namespace PDS_Server.Elements
 {
     public class DbAccount : DbElement
     {

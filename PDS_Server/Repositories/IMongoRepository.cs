@@ -1,5 +1,5 @@
-﻿using CommonEnvironment.Elements;
-using MongoDB.Bson;
+﻿using MongoDB.Bson;
+using PDS_Server.Elements;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -13,6 +13,7 @@ namespace PDS_Server.Repositories
         Task<IEnumerable<T>> Get();
         Task<bool> Update(ObjectId objectId, T instance);
         Task<bool> Delete(ObjectId objectId);
+        Task<bool> Delete(ObjectId[] objectIds);
         #endregion
 
         #region Teams
@@ -21,6 +22,7 @@ namespace PDS_Server.Repositories
         Task<IEnumerable<T>> Get(string teamId);
         Task<bool> Update(ObjectId objectId, T instance, string teamId);
         Task<bool> Delete(ObjectId objectId, string teamId);
+        Task<bool> Delete(ObjectId[] objectIds, string teamId);
         #endregion
     }
 }

@@ -1,13 +1,11 @@
 ﻿using AspNetCore.Yandex.ObjectStorage;
-using CommonEnvironment.Elements;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
+using PDS_Server.Elements;
 using PDS_Server.Repositories;
-using PDS_Server.Services;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -32,12 +30,12 @@ namespace PDS_Server.Controllers
         [HttpGet]
         public async Task<IActionResult> Index()
         {
-            var appData = (await _applicationRepository.Get()).ToList();
+            var appData = (await _applicationRepository.Get());
             appData.Reverse();
-            ViewBag.Applications = appData;
-            var pluginData = (await _pluginRepository.Get()).ToList();
+            ViewBag.Applications = appData.Take(3).ToList();
+            var pluginData = (await _pluginRepository.Get());
             pluginData.Reverse();
-            ViewBag.Plugins = pluginData;
+            ViewBag.Plugins = pluginData.ToList();
             return View("index");
         }
 

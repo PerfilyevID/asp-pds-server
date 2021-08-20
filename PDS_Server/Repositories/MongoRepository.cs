@@ -1,7 +1,6 @@
-﻿using CommonEnvironment.Elements;
-using CommonEnvironment.Elements.Revit;
-using MongoDB.Bson;
+﻿using MongoDB.Bson;
 using MongoDB.Driver;
+using PDS_Server.Elements;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -53,11 +52,27 @@ namespace PDS_Server.Repositories
             }
             return false;
         }
+        public async Task<bool> Delete(ObjectId[] objectIds, string teamId)
+        {
+            PrepareTeamCollection(teamId);
+            if (_targetCollections.TryGetValue(teamId, out IMongoCollection<T> teamCollection))
+            {
+                DeleteResult result = await teamCollection.DeleteManyAsync(_ => objectIds.Contains(_.Id));
+                return result.DeletedCount == objectIds.Length;
+            }
+            return false;
+        }
         public async Task<bool> Delete(ObjectId objectId)
         {
             FilterDefinition<T> filter = Builders<T>.Filter.Eq(c => c.Id, objectId);
             DeleteResult result = await _collection.DeleteOneAsync(filter);
             return result.DeletedCount == 1;
+        }
+
+        public async Task<bool> Delete(ObjectId[] objectIds)
+        {
+            DeleteResult result = await _collection.DeleteManyAsync(_ => objectIds.Contains(_.Id));
+            return result.DeletedCount == objectIds.Length;
         }
         public async Task<T> Get(ObjectId objectId)
         {
@@ -86,10 +101,10 @@ namespace PDS_Server.Repositories
             PrepareTeamCollection(teamId);
             if (_targetCollections.TryGetValue(teamId, out IMongoCollection<T> teamCollection))
             {
-                IEnumerable<T> elements = await _collection.Find(_ => true).ToListAsync();
+                IEnumerable<T> elements = await teamCollection.Find(_ => true).ToListAsync();
                 return elements;
             }
-            return new T[] { };
+            return null;
         }
         public async Task<bool> Update(ObjectId objectId, T element)
         {

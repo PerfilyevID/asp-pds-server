@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace CommonEnvironment.Elements
+namespace PDS_Server.Elements.Communications
 {
     public class DbChat : DbElement
     {

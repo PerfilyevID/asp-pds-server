@@ -1,9 +1,8 @@
-﻿using CommonEnvironment.Elements;
-using CommonEnvironment.Elements.Revit;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
+using PDS_Server.Elements;
+using PDS_Server.Elements.Revit;
 using PDS_Server.Repositories;
 using System;
 using System.Collections.Generic;
@@ -70,21 +69,35 @@ namespace PDS_Server.Api
                 if(!string.IsNullOrEmpty(name) && !string.IsNullOrEmpty(fullPath))
                 {
                     DbAccount user = await GetUser(User.Identity.Name);
-                    await _documentRepository.Create(new DbDocument()
+                    var documents = await _documentRepository.Get(user.Team.ToString());
+                    bool exist = false;
+                    if(isCloud)
                     {
-                        Department = null,
-                        FoundByUser = user.Id,
-                        FullPath = fullPath,
-                        Name = name,
-                        Project = null,
-                        ServerGuid = guid,
-                        SyncCount = 0,
-                        IsCloudModel = isCloud
-                    }, user.Team.ToString());
+                        if (documents.Where(x => x.IsCloudModel == isCloud && x.ServerGuid == guid).Any()) exist = true;
+                    }
+                    else
+                    {
+                        if (documents.Where(x => x.IsCloudModel == isCloud && x.FullPath == fullPath).Any()) exist = true;
+                    }
+                    if(!exist)
+                    {
+                        await _documentRepository.Create(new DbDocument()
+                        {
+                            Department = null,
+                            FoundByUser = user.Id,
+                            FullPath = fullPath,
+                            Name = name,
+                            Project = null,
+                            ServerGuid = guid,
+                            SyncCount = 0,
+                            IsCloudModel = isCloud
+                        }, user.Team.ToString());
+                        return Ok();
+                    }
                     return Ok();
                 }
             }
-            catch { }
+            catch (Exception e) { }
             return NotFound();
         }
 

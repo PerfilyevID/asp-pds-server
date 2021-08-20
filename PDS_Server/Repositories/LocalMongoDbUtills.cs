@@ -1,10 +1,9 @@
-﻿using CommonEnvironment.Elements;
-using CommonEnvironment.Elements.Revit;
-using MongoDB.Bson;
+﻿using MongoDB.Bson;
 using MongoDB.Driver;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using PDS_Server.Elements;
+using PDS_Server.Elements.Communications;
+using PDS_Server.Elements.Plugins;
+using PDS_Server.Elements.Revit;
 using System.Threading.Tasks;
 
 namespace PDS_Server.Repositories
@@ -128,7 +127,7 @@ namespace PDS_Server.Repositories
                     .Set(e => (e as DbClashResult).ItemsDone, (element as DbClashResult).ItemsDone)
                     .Set(e => (e as DbClashResult).LastChange, (element as DbClashResult).LastChange)
                     .Set(e => (e as DbClashResult).Name, (element as DbClashResult).Name)
-                    .Set(e => (e as DbClashResult).Project, (element as DbClashResult).Project);
+                    .Set(e => (e as DbClashResult).Group, (element as DbClashResult).Group);
                 UpdateResult result = await collection.UpdateOneAsync(filter, update);
                 return result.ModifiedCount == 1;
             }

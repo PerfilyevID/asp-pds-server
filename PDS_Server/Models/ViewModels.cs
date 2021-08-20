@@ -1,10 +1,4 @@
-﻿using AspNetCore.Yandex.ObjectStorage;
-using System.Collections.Generic;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-
-namespace PDS_Server.Models
+﻿namespace PDS_Server.Models
 {
     public class UserSettingsModel
     {

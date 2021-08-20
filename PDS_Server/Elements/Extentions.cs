@@ -1,7 +1,9 @@
-﻿using CommonEnvironment.Elements.Revit;
+﻿using PDS_Server.Elements.Communications;
+using PDS_Server.Elements.Revit;
 using System;
+using System.Linq;
 
-namespace CommonEnvironment.Elements
+namespace PDS_Server.Elements
 {
     public static class Extentions
     {
@@ -20,8 +22,9 @@ namespace CommonEnvironment.Elements
             {
                 FirstName = user.FirstName,
                 LastName = user.SecondName,
-                Team = user.Team,
-                ImageData = user.ImageData
+                Team = user.Team.ToString(),
+                ImageData = user.ImageData,
+                Role = user.Role
             };
         }
         public static dynamic ToResponse(this DbApplication application)
@@ -38,7 +41,7 @@ namespace CommonEnvironment.Elements
             return new
             {
                 Id = application.Id.ToString(),
-                Department = application.Department==null ? null : application.Department.ToString(),
+                Department = application.Department == null ? null : application.Department.ToString(),
                 FoundByUser = application.FoundByUser == null ? null : application.FoundByUser.ToString(),
                 FullPath = application.FullPath,
                 IsCloudModel = application.IsCloudModel,
@@ -46,6 +49,52 @@ namespace CommonEnvironment.Elements
                 NamSyncCounte = application.SyncCount,
                 ServerGuid = application.ServerGuid,
                 Project = application.Project == null ? null : application.Project.ToString(),
+            };
+        }
+        public static dynamic ToResponse(this DbClashResult clashResult)
+        {
+            return new
+            {
+                Id = clashResult.Id.ToString(),
+                Name = clashResult.Name,
+                ItemsDone = clashResult.ItemsDone,
+                ItemsCount = clashResult.ItemsCount,
+                LastChange = clashResult.LastChange,
+                CreationTime = clashResult.CreationTime,
+                Description = clashResult.Description,
+                Group = clashResult.Group.ToString(),
+            };
+        }
+        public static dynamic ToResponse(this DbGroupOfClashes clashResult)
+        {
+            return new
+            {
+                Id = clashResult.Id.ToString(),
+                Description = clashResult.Description,
+                IsClosed = clashResult.IsClosed,
+                Items = clashResult.Items.Select(x => x.ToString()),
+                Name = clashResult.Name,
+                Progress = clashResult.Progress,
+                Project = clashResult.Project
+            };
+        }
+        public static dynamic ToResponse(this DbChat chat)
+        {
+            return new
+            {
+                Id = chat.Id.ToString(),
+                LastChange = chat.LastChange,
+                Messages = chat.Messages.Select(x => x.ToResponse())
+            };
+        }
+        public static dynamic ToResponse(this DbMessage clashResult)
+        {
+            return new
+            {
+                To = clashResult.To.ToString(),
+                From = clashResult.From.ToString(),
+                Message = clashResult.Message,
+                Time = clashResult.Time
             };
         }
     }

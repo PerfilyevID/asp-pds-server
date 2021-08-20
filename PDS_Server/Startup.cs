@@ -1,24 +1,22 @@
 using AspNetCore.Yandex.ObjectStorage;
-using CommonEnvironment.Elements;
-using CommonEnvironment.Elements.Revit;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.DataProtection;
-using Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption;
-using Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption.ConfigurationModel;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using MongoDB.Driver;
+using PDS_Server.Elements;
+using PDS_Server.Elements.Communications;
+using PDS_Server.Elements.Plugins;
+using PDS_Server.Elements.Revit;
 using PDS_Server.Repositories;
 using PDS_Server.Services;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 
@@ -90,6 +88,7 @@ namespace PDS_Server
             services.AddTransient<IMongoRepository<DbDocument>, MongoRepository<DbDocument>>();
             services.AddTransient<IMongoRepository<DbTask>, MongoRepository<DbTask>>();
             services.AddTransient<IMongoRepository<DbCheckResult>, MongoRepository<DbCheckResult>>();
+            services.AddTransient<IMongoRepository<DbGroupOfClashes>, MongoRepository<DbGroupOfClashes>>();
 
             services.AddTransient<IMongoRepository<DbFamily>, MongoRepository<DbFamily>>();
             services.AddTransient<IMongoRepository<DbFamilyCategory>, MongoRepository<DbFamilyCategory>>();
