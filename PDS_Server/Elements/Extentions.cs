@@ -63,6 +63,7 @@ namespace PDS_Server.Elements
                 CreationTime = clashResult.CreationTime,
                 Description = clashResult.Description,
                 Group = clashResult.Group.ToString(),
+                Clashes = clashResult.Clashes
             };
         }
         public static dynamic ToResponse(this DbGroupOfClashes clashResult)
@@ -70,12 +71,12 @@ namespace PDS_Server.Elements
             return new
             {
                 Id = clashResult.Id.ToString(),
-                Description = clashResult.Description,
-                IsClosed = clashResult.IsClosed,
-                Items = clashResult.Items.Select(x => x.ToString()),
+                Project = clashResult.Project,
                 Name = clashResult.Name,
+                Description = clashResult.Description,
                 Progress = clashResult.Progress,
-                Project = clashResult.Project
+                Items = clashResult.Items.Select(x => x.ToString()),
+                IsClosed = clashResult.IsClosed
             };
         }
         public static dynamic ToResponse(this DbChat chat)
@@ -84,7 +85,7 @@ namespace PDS_Server.Elements
             {
                 Id = chat.Id.ToString(),
                 LastChange = chat.LastChange,
-                Messages = chat.Messages.Select(x => x.ToResponse())
+                Messages = chat.Messages != null ? chat.Messages.Select(x => x.ToResponse()) : null
             };
         }
         public static dynamic ToResponse(this DbMessage clashResult)

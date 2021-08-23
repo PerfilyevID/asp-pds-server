@@ -12,6 +12,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace PDS_Server.Api
@@ -51,7 +52,7 @@ namespace PDS_Server.Api
                 var result = await _clashResultRepository.Get(new ObjectId(id), user.Team.ToString());
                 if (result != null)
                 {
-                    return Ok(result.Clashes);
+                    return Ok(result.ToResponse());
                 }
             }
             catch (Exception e)
@@ -92,7 +93,7 @@ namespace PDS_Server.Api
                 {
                     return NotFound();
                 }
-                var result = await _clashResultRepository.Get(new ObjectId(id), user.Team.ToString());
+                var result = await _clashGroupRepository.Get(new ObjectId(id), user.Team.ToString());
                 if (result != null)
                 {
                     return Ok(result.ToResponse());
@@ -166,7 +167,7 @@ namespace PDS_Server.Api
             {
                 DbAccount user = await GetUser(User.Identity.Name);
                 using (Stream stream = data.OpenReadStream())
-                using (StreamReader reader = new StreamReader(stream))
+                using (StreamReader reader = new StreamReader(stream, Encoding.UTF8))
                 {
                     DbGroupOfClashes group = await _clashGroupRepository.Get(new ObjectId(clashGroup), user.Team.ToString());
                     if (group == null)
@@ -176,9 +177,9 @@ namespace PDS_Server.Api
                     DbClash[] clashes = JsonConvert.DeserializeObject<DbClash[]>(await reader.ReadToEndAsync());
                     foreach (DbClash clash in clashes)
                     {
-                        clash.ChatId = (await _chatRepository.Create(new DbChat() { LastChange = DateTime.UtcNow }), user.Team.ToString()).ToString();
+                        clash.ChatId = (await _chatRepository.Create(new DbChat() { LastChange = DateTime.UtcNow }, user.Team.ToString())).ToString();
                     }
-                    ObjectId id = await _clashResultRepository.Create(new DbClashResult()
+                    ObjectId clashId = await _clashResultRepository.Create(new DbClashResult()
                     {
                         Clashes = clashes,
                         CreationTime = DateTime.UtcNow,
@@ -189,21 +190,19 @@ namespace PDS_Server.Api
                         Name = name,
                         Group = new ObjectId(clashGroup)
                     }, user.Team.ToString());
+
                     if (group.Items == null)
                     {
-                        group.Items = new ObjectId[] { id };
+                        group.Items = new ObjectId[] { clashId };
                     }
                     else
                     {
-                        var list = group.Items.ToList();
-                        list.Add(id);
+                        List<ObjectId> list = group.Items.ToList();
+                        list.Add(clashId);
                         group.Items = list.ToArray();
                     }
                     await _clashGroupRepository.Update(group.Id, group, user.Team.ToString());
-                    if (group != null)
-                    {
-                        await UpdateClashGroup(group.Id, user);
-                    }
+                    await UpdateClashGroup(group.Id, user);
                 }
             }
             catch (Exception e)
@@ -246,8 +245,6 @@ namespace PDS_Server.Api
             return BadRequest();
         }
 
-
-
         [Route("deleteGroup")]
         [HttpPost]
         public async Task<IActionResult> DeleteGroup([FromForm] string id)
@@ -265,7 +262,7 @@ namespace PDS_Server.Api
                     await DeleteClashResult(i, user);
                 }
                 await _clashResultRepository.Delete(result.Items, user.Team.ToString());
-                await _clashResultRepository.Delete(result.Id, user.Team.ToString());
+                await _clashGroupRepository.Delete(result.Id, user.Team.ToString());
                 return Ok();
             }
             catch (Exception e)
@@ -297,7 +294,7 @@ namespace PDS_Server.Api
                     IsClosed = false,
                     Items = new ObjectId[] { },
                     Progress = 0,
-                    Project = useProject ? new ObjectId() : null
+                    Project = useProject ? new ObjectId(project) : null
                 }, user.Team.ToString());
                 return Ok(id.ToString());
             }
@@ -369,6 +366,7 @@ namespace PDS_Server.Api
             int max = 0;
             int done = 0;
             bool changed = false;
+
             foreach (ObjectId itemId in group.Items)
             {
                 var result = await UpdateClashResult(itemId, user);
@@ -376,7 +374,10 @@ namespace PDS_Server.Api
                 max += result.Item2.ItemsCount;
                 done += result.Item2.ItemsDone;
             }
-            int progress = done / max * 100;
+            int progress = 0;
+            try { progress = done / max * 100; }
+            catch { }
+
             if (group.Progress != progress)
             {
                 group.Progress = progress;

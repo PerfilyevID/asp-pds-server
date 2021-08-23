@@ -170,6 +170,18 @@ namespace PDS_Server.Repositories
                 UpdateResult result = await collection.UpdateOneAsync(filter, update);
                 return result.ModifiedCount == 1;
             }
+            else if (typeof(T) == typeof(DbGroupOfClashes))
+            {
+                UpdateDefinition<T> update = Builders<T>.Update
+                    .Set(e => (e as DbGroupOfClashes).Name, (element as DbGroupOfClashes).Name)
+                    .Set(e => (e as DbGroupOfClashes).Description, (element as DbGroupOfClashes).Description)
+                    .Set(e => (e as DbGroupOfClashes).IsClosed, (element as DbGroupOfClashes).IsClosed)
+                    .Set(e => (e as DbGroupOfClashes).Items, (element as DbGroupOfClashes).Items)
+                    .Set(e => (e as DbGroupOfClashes).Progress, (element as DbGroupOfClashes).Progress)
+                    .Set(e => (e as DbGroupOfClashes).Project, (element as DbGroupOfClashes).Project);
+                UpdateResult result = await collection.UpdateOneAsync(filter, update);
+                return result.ModifiedCount == 1;
+            }
             return false;
         }
     }
