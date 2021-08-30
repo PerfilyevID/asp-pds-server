@@ -55,20 +55,21 @@ namespace PDS_Server.Api
             try
             {
                 DbAccount user = await GetUser(User.Identity.Name);
-                var result = await _chatRepository.Get(new ObjectId(id), user.Team.ToString());
+                DbChat result = await _chatRepository.Get(new ObjectId(id), user.Team.ToString());
                 if (result != null)
                 {
-                    var messages = result.Messages;
+                    List<DbMessage> messages = result.Messages;
+                    if (messages == null) messages = new List<DbMessage>();
                     messages.Add(new DbMessage()
                     {
                         From = user.Id,
                         Message = message,
                         Time = DateTime.UtcNow,
-                        To = new ObjectId(to)
+                        To = string.IsNullOrEmpty(to) ? null : new ObjectId(to)
                     });
                     result.Messages = messages;
                     result.LastChange = DateTime.UtcNow;
-                    await _chatRepository.Update(result.Id, result);
+                    await _chatRepository.Update(result.Id, result, user.Team.ToString());
                     return Ok();
                 }
             }
@@ -89,13 +90,14 @@ namespace PDS_Server.Api
                 var result = await _chatRepository.Get(new ObjectId(id), user.Team.ToString());
                 if (result != null)
                 {
-                    var messages = result.Messages.ToList();
+                    List<DbMessage> messages = result.Messages;
+                    if (messages == null) messages = new List<DbMessage>();
                     if (messages[number].From == user.Id)
                     {
                         messages.RemoveAt(number);
                     }
                     result.Messages = messages;
-                    await _chatRepository.Update(result.Id, result);
+                    await _chatRepository.Update(result.Id, result, user.Team.ToString());
                     return Ok();
                 }
             }

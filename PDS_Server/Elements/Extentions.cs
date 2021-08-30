@@ -20,6 +20,7 @@ namespace PDS_Server.Elements
         {
             return new
             {
+                Id = user.Id.ToString(),
                 FirstName = user.FirstName,
                 LastName = user.SecondName,
                 Team = user.Team.ToString(),

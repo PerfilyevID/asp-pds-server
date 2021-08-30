@@ -30,9 +30,9 @@ namespace PDS_Server.Controllers
         [HttpGet]
         public async Task<IActionResult> Index()
         {
-            var appData = (await _applicationRepository.Get());
+            var appData = (await _applicationRepository.Get()).ToList();
             appData.Reverse();
-            ViewBag.Applications = appData.Take(3).ToList();
+            ViewBag.Applications = appData;
             var pluginData = (await _pluginRepository.Get());
             pluginData.Reverse();
             ViewBag.Plugins = pluginData.ToList();

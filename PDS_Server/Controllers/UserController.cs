@@ -56,6 +56,20 @@ namespace PDS_Server.Controllers
         }
 
         [HttpGet]
+        [Authorize]
+        [Route("All")]
+        public async Task<IActionResult> All()
+        {
+            try
+            {
+                DbAccount user = await GetUser(User.Identity.Name);
+                return new OkObjectResult((await _accountRepository.Get()).Where(x => x.Team == user.Team).Select(x => x.ToResponse()));
+            }
+            catch { }
+            return NotFound();
+        }
+
+        [HttpGet]
         [Authorize(Roles = AccessGroups.ADMIN)]
         [Route("list")]
         public async Task<IActionResult> List()

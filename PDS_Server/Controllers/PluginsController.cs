@@ -27,7 +27,7 @@ namespace PDS_Server.Api
 
         [HttpGet]
         [Route("plugins")]
-        [Authorize]
+        [Authorize(Roles = AccessGroups.APPROVED)]
         public async Task<IActionResult> Plugins()
         {
             var data = new List<object>();

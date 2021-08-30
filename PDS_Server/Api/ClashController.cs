@@ -333,9 +333,14 @@ namespace PDS_Server.Api
         #region Private
         private async Task DeleteClashResult(ObjectId id, DbAccount user)
         {
-            var result = await _clashResultRepository.Get(id, user.Team.ToString());
-            await _chatRepository.Delete(result.Clashes.Select(x => new ObjectId(x.ChatId)).ToArray(), user.Team.ToString());
-            //await _clashResultRepository.Delete(result.Id, user.Team.ToString());
+            DbClashResult result = await _clashResultRepository.Get(id, user.Team.ToString());
+            if(result != null)
+            {
+                if (result.Clashes != null)
+                {
+                    await _chatRepository.Delete(result.Clashes.Select(x => new ObjectId(x.ChatId)).ToArray(), user.Team.ToString());
+                }
+            }
         }
         private async Task<Tuple<bool, DbClashResult>> UpdateClashResult(ObjectId id, DbAccount user)
         {
@@ -366,18 +371,20 @@ namespace PDS_Server.Api
             int max = 0;
             int done = 0;
             bool changed = false;
-
-            foreach (ObjectId itemId in group.Items)
+            if(group.Items != null)
             {
-                var result = await UpdateClashResult(itemId, user);
-                if (result.Item1) changed = true;
-                max += result.Item2.ItemsCount;
-                done += result.Item2.ItemsDone;
+                foreach (ObjectId itemId in group.Items)
+                {
+                    Tuple<bool, DbClashResult> result = await UpdateClashResult(itemId, user);
+                    if (result == null) continue;
+                    if (result.Item1) changed = true;
+                    max += result.Item2.ItemsCount;
+                    done += result.Item2.ItemsDone;
+                }
             }
             int progress = 0;
             try { progress = done / max * 100; }
             catch { }
-
             if (group.Progress != progress)
             {
                 group.Progress = progress;
