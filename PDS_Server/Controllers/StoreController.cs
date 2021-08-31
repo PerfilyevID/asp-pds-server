@@ -28,63 +28,6 @@ namespace RevitTeams_Server.Controllers
             _yandexOptions = yandexOptions.Value.CreateYandexObjectService();
         }
 
-        [HttpPost]
-        [Route("plugins")]
-        [Authorize(Roles = AccessGroups.APPROVED)]
-        public async Task<IActionResult> Plugins([FromForm] string version)
-        {
-            var data = new List<object>();
-            try
-            {
-                var plugins = (await _pluginRepository.Get()).Where(x => x.Target == "cmn" || x.Target == "pnl").ToArray();
-                foreach (var p in plugins)
-                {
-                    var ver = p.Versions.Where(x => x.Published && x.RevitVersions.Where(z => z.Link != null && z.Number == version).Count() != 0).First();
-                    if (ver != null)
-                    {
-                        var pl = new
-                        {
-                            Id = p.Id.ToString(),
-                            Name = p.Name,
-                            Description = p.Description,
-                            Version = ver.Number,
-                            Changelog = ver.Changelog
-                        };
-                        data.Add(pl);
-                    }
-                }
-            }
-            catch (Exception)
-            { }
-            return new JsonResult(data);
-        }
-
-        [HttpPost]
-        [Route("plugin")]
-        [Authorize(Roles = AccessGroups.APPROVED)]
-        public async Task<IActionResult> Plugin([FromForm] string id, [FromForm] string version, [FromForm] string revitVersion)
-        {
-            try
-            {
-                List<object> data = new List<object>();
-                IEnumerable<DbPlugin> filteredCollection = (await _pluginRepository.Get()).Where(x => (x.Target == "cmn" || x.Target == "pnl") && x.Id == new ObjectId(id));
-                if(filteredCollection.Any())
-                {
-                    DbPlugin plugin = filteredCollection.First();
-                    foreach (DbVersion v in plugin.Versions.Where(x => x.Published))
-                    {
-                        IEnumerable <DbRevitVersionInstance> filteredRevitCollection = v.RevitVersions.Where(x => x.Number == revitVersion && x.Link != null);
-                        if (filteredRevitCollection.Any())
-                        {
-                            return File(await LoadFile(plugin, filteredRevitCollection.First()), "application/octet-stream");
-                        }
-                    }
-                }
-            }
-            catch { }
-            return NotFound();
-        }
-
         [HttpGet]
         [Route("publish")]
         public async Task<IActionResult> Publish(string id, string number)

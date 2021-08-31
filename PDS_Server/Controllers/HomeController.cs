@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using PDS_Server.Elements;
 using PDS_Server.Repositories;
+using PDS_Server.Services;
 using System;
 using System.IO;
 using System.Linq;
@@ -19,8 +20,10 @@ namespace PDS_Server.Controllers
         private readonly IMongoRepository<DbApplication> _applicationRepository;
         private readonly IMongoRepository<DbPlugin> _pluginRepository;
         private readonly YandexStorageService _yandexOptions;
-        public HomeController(IMongoRepository<DbPlugin> pluginRepository, IMongoRepository<DbApplication> applicationRepository, IOptions<YandexStorageOptions> yandexOptions)
+        private readonly IBot _bot;
+        public HomeController(IBot bot, IMongoRepository<DbPlugin> pluginRepository, IMongoRepository<DbApplication> applicationRepository, IOptions<YandexStorageOptions> yandexOptions)
         {
+            _bot = bot;
             _pluginRepository = pluginRepository;
             _applicationRepository = applicationRepository;
             _yandexOptions = yandexOptions.Value.CreateYandexObjectService();
@@ -40,7 +43,7 @@ namespace PDS_Server.Controllers
         }
 
         [HttpGet]
-        [Authorize(Roles= AccessGroups.APPROVED)]
+        [Authorize(Roles = AccessGroups.APPROVED)]
         [Route("download/{name?}")]
         public async Task<IActionResult> Download(string name)
         {
@@ -49,7 +52,7 @@ namespace PDS_Server.Controllers
                 Stream stream = await LoadFile(name);
                 if(stream != null) { return File(stream, "application/octet-stream"); }
             }
-            catch { }
+            catch (Exception e) { await _bot.SendException(e); }
             return NotFound();
         }
 
@@ -118,8 +121,9 @@ namespace PDS_Server.Controllers
             {
                 return await _yandexOptions.GetAsStreamAsync($"Releases/{name}");
             }
-            catch (Exception)
+            catch (Exception e)
             {
+                await _bot.SendException(e);
                 return null;
             }
             

@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using PDS_Server.Elements;
 using PDS_Server.Repositories;
+using PDS_Server.Services;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -19,8 +20,10 @@ namespace PDS_Server.Api
     {
         private readonly IMongoRepository<DbPlugin> _pluginRepository;
         private readonly YandexStorageService _yandexOptions;
-        public PluginsController(IMongoRepository<DbPlugin> accountRepository, IOptions<YandexStorageOptions> yandexOptions)
+        private readonly IBot _bot;
+        public PluginsController(IBot bot, IMongoRepository<DbPlugin> accountRepository, IOptions<YandexStorageOptions> yandexOptions)
         {
+            _bot = bot;
             _pluginRepository = accountRepository;
             _yandexOptions = yandexOptions.Value.CreateYandexObjectService();
         }
@@ -35,23 +38,18 @@ namespace PDS_Server.Api
             {
                 foreach (var plugin in await _pluginRepository.Get())
                 {
-                    try
+                    var instance = new
                     {
-                        var instance = new
-                        {
-                            Id = plugin.Id.ToString(),
-                            Name = plugin.Name,
-                            Description = plugin.Description,
-                            Version = plugin.Versions[0].Number,
-                            Changelog = plugin.Versions[0].Changelog
-                        };
-                        data.Add(instance);
-                    }
-                    catch { }
-
+                        Id = plugin.Id.ToString(),
+                        Name = plugin.Name,
+                        Description = plugin.Description,
+                        Version = plugin.Versions[0].Number,
+                        Changelog = plugin.Versions[0].Changelog
+                    };
+                    data.Add(instance);
                 }
             }
-            catch { }
+            catch (Exception e) { await _bot.SendException(e); }
             return new JsonResult(data);
         }
 
@@ -65,12 +63,17 @@ namespace PDS_Server.Api
                 List<object> data = new List<object>();
                 var collection = await _pluginRepository.Get();
                 DbPlugin plugin = collection.Where(x => x.Id.ToString() == id).First();
-                DbVersion targetVersion = plugin.Versions.Where(x => x.Published && x.RevitVersions.Where(z => z.Link != null && z.Number == version).Count() != 0).First();
+                if(plugin == null) throw new NullReferenceException($"Plugin #{id} not found");
+                if(!plugin.Versions.Any()) throw new NullReferenceException($"Plugin #{id} version list is empty");
+                DbVersion targetVersion = plugin.Versions.Where(x => x.Published && x.Number == version).Last();
+                if (targetVersion == null) throw new NullReferenceException($"Plugin's #{id} version #{version} not found");
                 DbRevitVersionInstance targetRevitVersion = targetVersion.RevitVersions.Where(x => x.Number == revitVersion).First();
                 if (targetVersion != null)
                     return File(await LoadFile(plugin, targetRevitVersion), "application/octet-stream");
+                else throw new NullReferenceException($"Failed to upload plugin #{id} data");
+
             }
-            catch { }
+            catch (Exception e) { await _bot.SendException(e); }
             return NotFound();
         }
 

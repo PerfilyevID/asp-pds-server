@@ -107,6 +107,8 @@ namespace PDS_Server
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+            app.UseDeveloperExceptionPage();
+
             app.Use(async (context, next) =>
             {
                 if (context.Request.Path.StartsWithSegments("/robots.txt"))
